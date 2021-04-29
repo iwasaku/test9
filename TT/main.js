@@ -2,31 +2,17 @@ const fallSE = new Howl({
     src: 'https://iwasaku.github.io/test3/SHU/resource/fall.mp3'
 });
 
-var SCREEN_WIDTH = 1136;              // スクリーン幅
-var SCREEN_HEIGHT = 640;              // スクリーン高さ
-var SCREEN_CENTER_X = SCREEN_WIDTH / 2;   // スクリーン幅の半分
-var SCREEN_CENTER_Y = SCREEN_HEIGHT / 2;  // スクリーン高さの半分
-var POINT_RATIO_X1_ZONE = SCREEN_CENTER_X;   // 得点1倍ゾーン
-var POINT_RATIO_X2_ZONE = SCREEN_CENTER_X / 2;   // 得点2倍ゾーン
-var POINT_RATIO_X3_ZONE = SCREEN_CENTER_X / 4;   // 得点3倍ゾーン
+// 横画面
+const SCREEN_WIDTH = 2436;              // スクリーン幅
+const SCREEN_HEIGHT = 1124;              // スクリーン高さ
+const SCREEN_CENTER_X = SCREEN_WIDTH / 2;   // スクリーン幅の半分
+const SCREEN_CENTER_Y = SCREEN_HEIGHT / 2;  // スクリーン高さの半分
 
-var FONT_FAMILY = "'Press Start 2P','Meiryo',sans-serif";
+const FONT_FAMILY = "'misaki_gothic','Meiryo',sans-serif";
 var ASSETS = {
     "player": "./resource/angus_128_anim.png",
-    "pl_shuriken": "./resource/shuriken.png",
-    "ene_shuriken": "./resource/shuriken.png",
-
-    "utena1": "./resource/utena1.png",
-    "utena2": "./resource/utena2.png",
-    "utena3": "./resource/utena3.png",
-    "utena5": "./resource/utena5.png",
-    "utena6": "./resource/utena6.png",
-    "utena7": "./resource/utena7.png",
 
     "bg_gra": "./resource/bg_gra.png",
-    "bg_yuka_0": "./resource/bg_yuka_0.png",
-    "bg_yuka_1": "./resource/bg_yuka_1.png",
-    "bg_yuka_2": "./resource/bg_yuka_2.png",
 };
 
 // 定義
@@ -214,7 +200,7 @@ tm.define("LogoScene", {
                     fillStyle: "#888",
                     fontSize: 64,
                     fontFamily: FONT_FAMILY,
-                    text: "",
+                    text: "UNOFFICIAL GAME",
                     align: "center",
                 },
             ]
@@ -224,8 +210,8 @@ tm.define("LogoScene", {
 
     update: function (app) {
         // 時間が来たらタイトルへ
-        //        if(++this.localTimer >= 5*app.fps)
-        this.app.replaceScene(TitleScene());
+        if (++this.localTimer >= 5 * app.fps)
+            this.app.replaceScene(TitleScene());
     }
 });
 
@@ -246,7 +232,7 @@ tm.define("TitleScene", {
                     fillStyle: "#fff",
                     fontSize: 64,
                     fontFamily: FONT_FAMILY,
-                    text: "SHRKN NG-NG\n~U.v.U.2~",
+                    text: "TRNSPSNTRP",
                     align: "center",
                 },
                 {
@@ -661,25 +647,6 @@ tm.define("Player", {
  * PlayerShuriken
  */
 tm.define("PlayerShuriken", {
-    superClass: "tm.app.Sprite",
-
-    init: function (uid, yPos) {
-        this.superInit("pl_shuriken", 32, 32);
-        this.uid = uid;
-        this.direct = '';
-        this.zRot = 0;
-        this.setPosition(128 - 32, yPos).setScale(1, 1);
-        this.setInteractive(false);
-        this.setBoundingType("rect");
-        this.isDead = Boolean(0);
-    },
-
-    update: function (app) {
-        if (player.status.isDead) return;
-        this.x += 20;
-        this.zRot += 20;
-        this.rotation = this.zRot;
-    },
 });
 
 /*
@@ -929,144 +896,39 @@ tm.define("Enemy", {
     },
 });
 
-/*
- * EnemyShuriken
- */
-tm.define("EnemyShuriken", {
-    superClass: "tm.app.Sprite",
-
-    init: function (uid, xPos, yPos) {
-        this.superInit("ene_shuriken", 32, 32);
-        this.uid = uid;
-        this.direct = '';
-        this.zRot = 0;
-        this.setPosition(xPos - 32, yPos).setScale(1, 1);
-        this.setInteractive(false);
-        this.setBoundingType("rect");
-        this.isDead = Boolean(0);
-    },
-
-    update: function (app) {
-        if (player.status.isDead) return;
-        this.x -= 10;
-        this.zRot -= 20;
-        this.rotation = this.zRot;
-    },
-});
-
 // プレイヤー手裏剣と敵との当たり判定
 function checkPlShurikenToEnemy() {
-    var self = this;
-    var deadPlShuriken = [];
-    var deadEnemy = [];
-    var deadEneShuriken = [];
-
-    for (var ii = 0; ii < self.plShurikenArray.length; ii++) {
-        var tmpShu = self.plShurikenArray[ii];
-
-        // 敵との当たり判定
-        for (var jj = 0; jj < self.enemyArray.length; jj++) {
-            var tmpEne = self.enemyArray[jj];
-            if (tmpEne.x >= SCREEN_WIDTH - 8) continue; // そもそも画面外では当たらない
-            if (!tmpShu.isHitElement(tmpEne)) continue; // 当たってない
-            tmpShu.isDead = Boolean(1);
-            deadPlShuriken.push(tmpShu);
-            if (tmpEne.status.isDead) continue; // 既に死亡済み
-            if (tmpEne.isHit) continue; // 既に今回の当たり判定発生中
-            if (tmpEne.mutekiCounter > 0) continue; // 無敵中
-            tmpEne.isHit = Boolean(1);
-            if (--tmpEne.life >= 1) continue;   // 残ライフが1以上
-            tmpEne.status = EN_STATUS.DEAD;
-            deadEnemy.push(tmpEne);
-        }
-
-        // 敵手裏剣との当たり判定
-        if (!tmpShu.isDead) {
-            for (var jj = 0; jj < self.eneShurikenArray.length; jj++) {
-                var tmpEneShu = self.eneShurikenArray[jj];
-                if (tmpEneShu.x >= SCREEN_WIDTH - 16) continue; // そもそも画面外では当たらない
-                if (!tmpShu.isHitElement(tmpEneShu)) continue;  // 当たってない
-                tmpShu.isDead = Boolean(1);
-                deadPlShuriken.push(tmpShu);
-                if (tmpEneShu.isDead) continue; // 既に死亡済み
-                tmpEneShu.isDead = Boolean(1);
-                deadEneShuriken.push(tmpEneShu);
-            }
-        }
-
-        // 画面右端から出た？
-        if (!tmpShu.isDead) {
-            if (tmpShu.x > SCREEN_WIDTH) {
-                deadPlShuriken.push(tmpShu);
-            }
-        }
-    }
-
-    // 削除対象の手裏剣を削除
-    for (var ii = 0; ii < deadPlShuriken.length; ii++) {
-        if (deadPlShuriken[ii].parent == null) console.log("NULL!!");
-        else deadPlShuriken[ii].remove();
-        self.plShurikenArray.erase(deadPlShuriken[ii]);
-    }
-    // 削除対象の敵を削除
-    for (var ii = 0; ii < deadEnemy.length; ii++) {
-        if (deadEnemy[ii].x > POINT_RATIO_X1_ZONE) nowScore += deadEnemy[ii].point; // 得点1倍ゾーン
-        else if (deadEnemy[ii].x > POINT_RATIO_X2_ZONE) nowScore += deadEnemy[ii].point * 2; // 得点2倍ゾーン
-        else if (deadEnemy[ii].x > POINT_RATIO_X3_ZONE) nowScore += deadEnemy[ii].point * 3; // 得点3倍ゾーン
-        else nowScore += deadEnemy[ii].point * 4; // 得点4倍ゾーン
-        shurikenLeft += deadEnemy[ii].shuriken;
-        deadEnemy[ii].remove();
-        self.enemyArray.erase(deadEnemy[ii]);
-    }
-    // 削除対象の敵手裏剣を削除
-    for (var ii = 0; ii < deadEneShuriken.length; ii++) {
-        deadEneShuriken[ii].remove();
-        self.eneShurikenArray.erase(deadEneShuriken[ii]);
-    }
 }
 
 // 敵手裏剣とプレイヤーとの当たり判定
 function checkEneShurikenToPlayer() {
-    if (player.status == PL_STATUS.DEAD) return;
-
-    var self = this;
-    for (var ii = 0; ii < self.eneShurikenArray.length; ii++) {
-        var tmpEneShu = self.eneShurikenArray[ii];
-        if (!player.isHitElement(tmpEneShu)) continue;  // 当たってない
-        if (abs(player.x - tmpEneShu.x) >= 32) continue;    // 見た目で当たってない距離
-        player.status = PL_STATUS.DEAD;
-        break;
-    }
 }
 
 // 
 function clearArrays() {
-    var self = this;
-
-    for (var ii = self.plShurikenArray.length - 1; ii >= 0; ii--) {
-        var tmp = self.plShurikenArray[ii];
-        if (tmp.parent == null) console.log("NULL!!");
-        else tmp.remove();
-        self.plShurikenArray.erase(tmp);
-    }
-
-    for (var ii = self.enemyArray.length - 1; ii >= 0; ii--) {
-        var tmp = self.enemyArray[ii];
-        if (tmp.parent == null) console.log("NULL!!");
-        else tmp.remove();
-        self.enemyArray.erase(tmp);
-    }
-
-    for (var ii = self.eneShurikenArray.length - 1; ii >= 0; ii--) {
-        var tmp = self.eneShurikenArray[ii];
-        if (tmp.parent == null) console.log("NULL!!");
-        else tmp.remove();
-        self.eneShurikenArray.erase(tmp);
-    }
 }
 
 // 絶対値を返す関数
 // https://iwb.jp/javascript-math-abs-deprecated/
 function abs(val) {
     return val < 0 ? -val : val;
+}
+
+// 指定の範囲で乱数を求める
+// ※start < end
+// ※startとendを含む
+function myRandom(start, end) {
+    if (randomMode) {
+        var max = (end - start) + 1;
+        return Math.floor(Math.random() * Math.floor(max)) + start;
+    } else {
+        const MAX_RND_SEED = 1801439850948197;    // Math,].floor(Number.MAX_SAFE_INTEGER / 5)-1
+        var mod = (end - start) + 1;
+        randomSeed = (randomSeed * 5) + 1;
+        for (; ;) {
+            if (randomSeed < MAX_RND_SEED) break;
+            randomSeed -= MAX_RND_SEED;
+        }
+        return (randomSeed % mod) + start;
+    }
 }
