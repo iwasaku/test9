@@ -1,5 +1,17 @@
 const fallSE = new Howl({
-    src: 'https://iwasaku.github.io/test3/SHU/resource/fall.mp3'
+    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/fall.mp3'
+});
+const coinSE = new Howl({
+    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
+});
+const hitSE = new Howl({
+    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
+});
+const jumpSE = new Howl({
+    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/jump.mp3'
+});
+const shotSE = new Howl({
+    src: 'https://iwasaku.github.io/test8/COKS/resource/explosion_0.mp3'
 });
 
 // 横画面
@@ -11,8 +23,25 @@ const SCREEN_CENTER_Y = SCREEN_HEIGHT / 2;  // スクリーン高さの半分
 const FONT_FAMILY = "'misaki_gothic','Meiryo',sans-serif";
 var ASSETS = {
     "player": "./resource/angus_128_anim.png",
+    "package": "./resource/shuriken.png",
 
-    "bg_gra": "./resource/bg_gra.png",
+    "house_0": "./resource/planet_128.png",
+    "house_1": "./resource/planet_128.png",
+    "house_2": "./resource/planet_128.png",
+    "house_3": "./resource/planet_128.png",
+
+    "arrow": "./resource/arrow_d_128.png",
+
+    "ymt": "./resource/utena1.png",
+    "jp": "./resource/utena2.png",
+    "fdx": "./resource/utena3.png",
+    "dhl": "./resource/utena4.png",
+    "pkg": "./resource/shuriken.png",
+
+    "bg_sky": "./resource/bg_gra.png",
+    "bg_road": "./resource/bg_gra.png",
+    "fg_rain_0": "./resource/bg_front.png",
+    "fg_rain_1": "./resource/bg_back.png",
 };
 
 // 定義
@@ -21,6 +50,7 @@ var PL_STATUS = defineEnum({
         value: 0,
         isStart: Boolean(0),
         isDead: Boolean(0),
+        isMove: Boolean(0),
         canAction: Boolean(0),
         string: 'init'
     },
@@ -28,6 +58,9 @@ var PL_STATUS = defineEnum({
         value: 1,
         isStart: Boolean(1),
         isDead: Boolean(0),
+        isMoveX: Boolean(0),
+        isMoveY: Boolean(0),
+        isMove: Boolean(0),
         canAction: Boolean(1),
         string: 'stand'
     },
@@ -35,27 +68,115 @@ var PL_STATUS = defineEnum({
         value: 2,
         isStart: Boolean(1),
         isDead: Boolean(0),
+        isMoveX: Boolean(0),
+        isMoveY: Boolean(1),
+        isMove: Boolean(1),
         canAction: Boolean(0),
+        ofs_table: [
+            0,
+            -28,
+            -56,
+            -84,
+            -112,
+            -140,
+            -140,
+            -154,
+            -168,
+            -154,
+            -140,
+        ],
         string: 'up'
     },
     MOVE_DOWN: {
         value: 3,
         isStart: Boolean(1),
         isDead: Boolean(0),
+        isMoveX: Boolean(0),
+        isMoveY: Boolean(1),
+        isMove: Boolean(1),
         canAction: Boolean(0),
+        ofs_table: [
+            0,
+            28,
+            56,
+            84,
+            112,
+            140,
+            140,
+            154,
+            168,
+            154,
+            140,
+        ],
         string: 'down'
     },
-    SHOT: {
+    MOVE_RIGHT: {
         value: 4,
         isStart: Boolean(1),
         isDead: Boolean(0),
+        isMoveX: Boolean(1),
+        isMoveY: Boolean(0),
+        isMove: Boolean(1),
+        canAction: Boolean(0),
+        ofs_table: [
+            0,
+            28,
+            56,
+            84,
+            112,
+            140,
+            140,
+            154,
+            168,
+            154,
+            140,
+        ],
+        string: 'right'
+    },
+    MOVE_LEFT: {
+        value: 5,
+        isStart: Boolean(1),
+        isDead: Boolean(0),
+        isMoveX: Boolean(1),
+        isMoveY: Boolean(0),
+        isMove: Boolean(1),
+        canAction: Boolean(0),
+        ofs_table: [
+            0,
+            -28,
+            -56,
+            -84,
+            -112,
+            -140,
+            -140,
+            -154,
+            -168,
+            -154,
+            -140,
+        ],
+        string: 'left'
+    },
+    JUMP: {
+        value: 6,
+        isStart: Boolean(1),
+        isDead: Boolean(0),
+        isMove: Boolean(0),
+        canAction: Boolean(0),
+        string: 'jump'
+    },
+    SHOT: {
+        value: 7,
+        isStart: Boolean(1),
+        isDead: Boolean(0),
+        isMove: Boolean(0),
         canAction: Boolean(0),
         string: 'shot'
     },
     DEAD: {
-        value: 5,
+        value: 8,
         isStart: Boolean(0),
         isDead: Boolean(1),
+        isMove: Boolean(0),
         canAction: Boolean(0),
         string: 'dead'
     },
@@ -90,80 +211,80 @@ var EN_STATUS = defineEnum({
         canAction: Boolean(0),
         string: 'down'
     },
-    SHOT: {
-        value: 4,
-        isStart: Boolean(1),
-        isDead: Boolean(0),
-        canAction: Boolean(0),
-        string: 'shot'
-    },
     DEAD: {
-        value: 5,
+        value: 4,
         isStart: Boolean(0),
         isDead: Boolean(1),
         canAction: Boolean(0),
         string: 'dead'
     },
 });
-const moveUpOffset = [
-    0,
-    -51,
-    -97,
-    -137,
-    -171,
-    -200,
-    -222,
-    -239,
-    -251,
-    -257,
-    -257,
-    -251,
-    -239,
-    -222,
-    -200,
+
+const lanePosX = [
+    SCREEN_CENTER_X + (140 * 1) - 140 * 5,    // 低速（前方の敵：低速、後方の敵：高速）
+    SCREEN_CENTER_X + (140 * 1) - 140 * 4,
+    SCREEN_CENTER_X + (140 * 1) - 140 * 3,
+    SCREEN_CENTER_X + (140 * 1) - 140 * 2,
+    SCREEN_CENTER_X + (140 * 1) - 140 * 1,
+    SCREEN_CENTER_X + (140 * 1) - 140 * 0,
+    SCREEN_CENTER_X + (140 * 1) + 140 * 1,
+    SCREEN_CENTER_X + (140 * 1) + 140 * 2,
+    SCREEN_CENTER_X + (140 * 1) + 140 * 3,    // 高速（前方の敵：高速、後方の敵：低速）
 ];
-const moveDownOffset = [
-    0,
-    -22,
-    -39,
-    -51,
-    -57,
-    -57,
-    -51,
-    -39,
-    -22,
-    0,
-    29,
-    63,
-    103,
-    149,
-    200,
+const spdOfs = [
+    4 * 2,
+    3 * 2,
+    2 * 2,
+    1 * 2,
+    0 * 2,
+    -1 * 2,
+    -2 * 2,
+    -3 * 2,
+    -4 * 2,
 ];
-const floorYPos = [
-    SCREEN_CENTER_Y + 210,
-    SCREEN_CENTER_Y + 10,
-    SCREEN_CENTER_Y - 190,
+const lanePosY = [
+    // 空（矢印）
+    // 家
+    // 歩道
+    0 + 140 * 3,    // レーン0
+    0 + 140 * 4,    // レーン1
+    0 + 140 * 5,    // レーン2
+    0 + 140 * 6,    // レーン3
+    0 + 140 * 7,    // レーン4
+    // 歩道 or 家
 ];
 
-var group0 = null;
-var group1 = null;
-var group2 = null;
+var group0 = null;  // 背景
+var group1 = null;  // 家
+var group2 = null;  // 道路
+var group3 = null;  // ene
+var group4 = null;  // player
+var group5 = null;  // 荷物
+var group6 = null;  // 雨
 var player = null;
-var plShurikenArray = [];
+var packageArray = [];
 var enemyArray = [];
-var eneShurikenArray = [];
+var houseArray = [];
+var arrowArray = [];
 var uidCounter = 0;
 var nowScore = 0;
-var shurikenLeft = 50;
+var packageLeft = 5;
+var houseCounter = 0;
+var timeLeft = 50;
 var totalFrame = 0;
 var totalSec = 0;
+const BASE_SPD = -10;
+
+var randomSeed = 3557;
+var randomMode = Boolean(0);
+
 tm.main(function () {
     // アプリケーションクラスを生成
     var app = tm.display.CanvasApp("#world");
     app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);    // サイズ(解像度)設定
     app.fitWindow();                            // 自動フィッティング有効
     app.background = "rgba(77, 136, 255, 1.0)"; // 背景色
-    app.fps = 30;                               // フレーム数
+    app.fps = 60;                               // フレーム数
 
     var loading = tm.ui.LoadingScene({
         assets: ASSETS,
@@ -210,8 +331,8 @@ tm.define("LogoScene", {
 
     update: function (app) {
         // 時間が来たらタイトルへ
-        if (++this.localTimer >= 5 * app.fps)
-            this.app.replaceScene(TitleScene());
+        //        if (++this.localTimer >= 5 * app.fps)
+        this.app.replaceScene(TitleScene());
     }
 });
 
@@ -241,7 +362,7 @@ tm.define("TitleScene", {
                         {
                             text: "START",
                             fontFamily: FONT_FAMILY,
-                            fontSize: 32,
+                            fontSize: 64,
                             bgColor: "hsl(240, 0%, 70%)",
                         }
                     ],
@@ -272,22 +393,25 @@ tm.define("GameScene", {
     init: function () {
         this.superInit();
 
-        group0 = tm.display.CanvasElement().addChildTo(this);
-        group1 = tm.display.CanvasElement().addChildTo(this);
-        group2 = tm.display.CanvasElement().addChildTo(this);
+        group0 = tm.display.CanvasElement().addChildTo(this);   // 空
+        group1 = tm.display.CanvasElement().addChildTo(this);   // 家、矢印
+        group2 = tm.display.CanvasElement().addChildTo(this);   // 道路
+        group3 = tm.display.CanvasElement().addChildTo(this);   // 敵
+        group4 = tm.display.CanvasElement().addChildTo(this);   // プレイヤー、小包
+        group5 = tm.display.CanvasElement().addChildTo(this);   // 雨
+        group6 = tm.display.CanvasElement().addChildTo(this);
 
-        this.bgGradation = tm.display.Sprite("bg_gra", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
+        this.bgGradation = tm.display.Sprite("bg_sky", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
         this.bgGradation.setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
-
-        this.bgFloor0 = tm.display.Sprite("bg_yuka_0").addChildTo(group0);
-        this.bgFloor0.setPosition(SCREEN_CENTER_X, 600 - 60);
-        this.bgFloor1 = tm.display.Sprite("bg_yuka_1").addChildTo(group0);
-        this.bgFloor1.setPosition(SCREEN_CENTER_X, 400 - 60);
-        this.bgFloor2 = tm.display.Sprite("bg_yuka_2").addChildTo(group0);
-        this.bgFloor2.setPosition(SCREEN_CENTER_X, 150 - 55);
+        this.bgGradation = tm.display.Sprite("bg_road", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
+        this.bgGradation.setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
+        this.fgRain0 = tm.display.Sprite("fg_rain_0", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group5);
+        this.fgRain0.setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
+        this.fgRain1 = tm.display.Sprite("fg_rain_1", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group5);
+        this.fgRain1.setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
 
         clearArrays();
-        player = new Player().addChildTo(group1);
+        player = new Player().addChildTo(group4);
 
         this.fromJSON({
             children: [
@@ -298,22 +422,34 @@ tm.define("GameScene", {
                     fillStyle: "#fff",
                     shadowColor: "#000",
                     shadowBlur: 10,
-                    fontSize: 32,
+                    fontSize: 64,
                     fontFamily: FONT_FAMILY,
                     text: "0",
                     align: "right",
                 },
                 {
-                    type: "Label", name: "shurikenLeftLabel",
-                    x: SCREEN_WIDTH - 16,
+                    type: "Label", name: "packageLeftLabel",
+                    x: 0 + 16,
+                    y: 32,
+                    fillStyle: "#fff",
+                    shadowColor: "#000",
+                    shadowBlur: 10,
+                    fontSize: 64,
+                    fontFamily: FONT_FAMILY,
+                    text: "10",
+                    align: "left",
+                },
+                {
+                    type: "Label", name: "timeLeftLabel",
+                    x: SCREEN_CENTER_X,
                     y: 80,
                     fillStyle: "#fff",
                     shadowColor: "#000",
                     shadowBlur: 10,
-                    fontSize: 32,
+                    fontSize: 96,
                     fontFamily: FONT_FAMILY,
-                    text: "10",
-                    align: "right",
+                    text: "0",
+                    align: "center",
                 },
                 {
                     type: "Label", name: "startLabel",
@@ -322,7 +458,7 @@ tm.define("GameScene", {
                     fillStyle: "#fff",
                     shadowColor: "#000",
                     shadowBlur: 10,
-                    fontSize: 32,
+                    fontSize: 96,
                     fontFamily: FONT_FAMILY,
                     text: "TAP TO START",
                     align: "center",
@@ -333,12 +469,12 @@ tm.define("GameScene", {
                         {
                             text: "TWEET",
                             fontFamily: FONT_FAMILY,
-                            fontSize: 32,
+                            fontSize: 64,
                             bgColor: "hsl(240, 80%, 70%)",
                         }
                     ],
-                    x: SCREEN_CENTER_X - 160,
-                    y: 580,
+                    x: SCREEN_CENTER_X - 140 * 2,
+                    y: SCREEN_CENTER_Y + 140 * 3,
                     alpha: 0.0,
                 },
                 {
@@ -347,67 +483,113 @@ tm.define("GameScene", {
                         {
                             text: "RESTART",
                             fontFamily: FONT_FAMILY,
-                            fontSize: 32,
+                            fontSize: 64,
                             cornerRadius: 8,
                             bgColor: "hsl(240, 0%, 70%)",
                         }
                     ],
-                    x: SCREEN_CENTER_X + 160,
-                    y: 580,
+                    x: SCREEN_CENTER_X + 140 * 2,
+                    y: SCREEN_CENTER_Y + 140 * 3,
                     alpha: 0.0,
                 },
                 {
-                    type: "FlatButton", name: "upButton",
+                    type: "FlatButton", name: "keyUp",
                     init: [
                         {
-                            text: "⬆",
+                            text: "↑",
                             fontFamily: FONT_FAMILY,
-                            fontSize: 64,
-                            width: 128,
-                            height: 128,
+                            fontSize: 96,
+                            width: 180,
+                            height: 180,
                             bgColor: "hsl(0, 100%, 50%)",
                         }
                     ],
-                    x: 128,
-                    y: 400,
+                    x: (0 + 96) + 96 + 192,
+                    y: (SCREEN_HEIGHT - 96) - 96 - 192,
                     alpha: 0.0,
                 },
                 {
-                    type: "FlatButton", name: "downButton",
+                    type: "FlatButton", name: "keyDown",
                     init: [
                         {
-                            text: "⬇",
+                            text: "↓",
                             fontFamily: FONT_FAMILY,
-                            fontSize: 64,
-                            width: 128,
-                            height: 128,
+                            fontSize: 96,
+                            width: 180,
+                            height: 180,
                             bgColor: "hsl(0, 100%, 50%)",
                         }
                     ],
-                    x: 128,
-                    y: 550,
+                    x: (0 + 96) + 96 + 192,
+                    y: (SCREEN_HEIGHT - 96) - 96,
                     alpha: 0.0,
                 },
                 {
-                    type: "FlatButton", name: "aButton",
+                    type: "FlatButton", name: "keyLeft",
                     init: [
                         {
-                            text: "A",
+                            text: "←",
                             fontFamily: FONT_FAMILY,
-                            fontSize: 64,
-                            width: 128,
-                            height: 128,
+                            fontSize: 96,
+                            width: 180,
+                            height: 180,
                             bgColor: "hsl(0, 100%, 50%)",
                         }
                     ],
-                    x: 1136 - 128,
-                    y: 550,
+                    x: (0 + 96) + 96,
+                    y: (SCREEN_HEIGHT - 96) - 192,
+                    alpha: 0.0,
+                },
+                {
+                    type: "FlatButton", name: "keyRight",
+                    init: [
+                        {
+                            text: "→",
+                            fontFamily: FONT_FAMILY,
+                            fontSize: 96,
+                            width: 180,
+                            height: 180,
+                            bgColor: "hsl(0, 100%, 50%)",
+                        }
+                    ],
+                    x: (0 + 96) + 96 + 192 + 192,
+                    y: (SCREEN_HEIGHT - 96) - 192,
+                    alpha: 0.0,
+                },
+                {
+                    type: "FlatButton", name: "buttonA",
+                    init: [
+                        {
+                            text: "Ａ",
+                            fontFamily: FONT_FAMILY,
+                            fontSize: 96,
+                            width: 180,
+                            height: 180,
+                            bgColor: "hsl(0, 100%, 50%)",
+                        }
+                    ],
+                    x: (SCREEN_WIDTH - 96) - 96 - 192,
+                    y: (SCREEN_HEIGHT - 96) - 192,
+                    alpha: 0.0,
+                },
+                {
+                    type: "FlatButton", name: "buttonB",
+                    init: [
+                        {
+                            text: "Ｂ",
+                            fontFamily: FONT_FAMILY,
+                            fontSize: 96,
+                            width: 180,
+                            height: 180,
+                            bgColor: "hsl(0, 100%, 50%)",
+                        }
+                    ],
+                    x: (SCREEN_WIDTH - 96) - 96,
+                    y: (SCREEN_HEIGHT - 96) - 192,
                     alpha: 0.0,
                 },
             ]
         });
-        this.shurikenLeftSprite = tm.display.Sprite("pl_shuriken").addChildTo(group2);
-        this.shurikenLeftSprite.setPosition(SCREEN_WIDTH - 128, 80);
 
         this.tweetButton.sleep();
         this.restartButton.sleep();
@@ -417,41 +599,79 @@ tm.define("GameScene", {
             self.app.replaceScene(GameScene());
         };
 
-        this.upButton.sleep();
-        this.upButton.onpointingstart = function () {
+        this.keyUp.sleep();
+        this.keyUp.onpointingstart = function () {
             if (!player.status.canAction) return;
-            if (player.nowFloor >= 2) return;
+            if (player.nowLaneY <= 0) return;
             player.status = PL_STATUS.MOVE_UP;
-            player.nextFloor = player.nowFloor + 1;
+            player.nextLaneY = player.nowLaneY - 1;
             player.moveCounter = 0;
         };
-        this.downButton.sleep();
-        this.downButton.onpointingstart = function () {
+
+        this.keyDown.sleep();
+        this.keyDown.onpointingstart = function () {
             if (!player.status.canAction) return;
-            if (player.nowFloor <= 0) return;
+            if (player.nowLaneY >= lanePosY.length - 1) return;
             player.status = PL_STATUS.MOVE_DOWN;
-            player.nextFloor = player.nowFloor - 1;
+            player.nextLaneY = player.nowLaneY + 1;
             player.moveCounter = 0;
         };
-        this.aButton.sleep();
-        this.aButton.onpointingstart = function () {
+
+        this.keyLeft.sleep();
+        this.keyLeft.onpointingstart = function () {
             if (!player.status.canAction) return;
-            if (shurikenLeft <= 0) return;
+            if (player.nowLaneX <= 0) return;
+            player.status = PL_STATUS.MOVE_LEFT;
+            player.nextLaneX = player.nowLaneX - 1;
+            player.moveCounter = 0;
+        };
+
+        this.keyRight.sleep();
+        this.keyRight.onpointingstart = function () {
+            if (!player.status.canAction) return;
+            if (player.nowLaneX >= lanePosX.length - 1) return;
+            player.status = PL_STATUS.MOVE_RIGHT;
+            player.nextLaneX = player.nowLaneX + 1;
+            player.moveCounter = 0;
+        };
+
+        this.buttonA.sleep();
+        this.buttonA.onpointingstart = function () {
+            if (!player.status.canAction) return;
+            if (packageLeft <= 0) return;
             player.status = PL_STATUS.SHOT;
             player.moveCounter = 0;
             player.gotoAndPlay("shot");
-            shurikenLeft--;
+            packageLeft--;
+        };
+
+        this.buttonB.sleep();
+        this.buttonB.onpointingstart = function () {
+            if (!player.status.canAction) return;
+            player.status = PL_STATUS.JUMP;
+            player.moveCounter = 0;
+            jumpSE.play();
         };
 
         this.buttonAlpha = 0.0;
 
         nowScore = 0;
-        shurikenLeft = 50;
+        packageLeft = 10;
+        houseCounter = 0;
         totalFrame = 0;
 
         this.frame = 0;
 
         this.stopBGM = false;
+
+        //　最初の家を表示
+        for (var ii = 20; ii >= 0; ii--) {
+            var kind = 0;
+            var house = House(++uidCounter, kind, 128 * ii, false);
+            console.log(house.x);
+            house.addChildTo(group1);
+            houseArray.push(house);
+        }
     },
 
     onpointingstart: function () {
@@ -460,13 +680,19 @@ tm.define("GameScene", {
         if (!player.status.isStart) {
             this.startLabel.remove();
 
-            this.upButton.setAlpha(0.4);
-            this.downButton.setAlpha(0.4);
-            this.aButton.setAlpha(0.4);
+            this.keyUp.setAlpha(0.4);
+            this.keyDown.setAlpha(0.4);
+            this.keyLeft.setAlpha(0.4);
+            this.keyRight.setAlpha(0.4);
+            this.buttonA.setAlpha(0.4);
+            this.buttonB.setAlpha(0.4);
 
-            this.upButton.wakeUp();
-            this.downButton.wakeUp();
-            this.aButton.wakeUp();
+            this.keyUp.wakeUp();
+            this.keyDown.wakeUp();
+            this.keyLeft.wakeUp();
+            this.keyRight.wakeUp();
+            this.buttonA.wakeUp();
+            this.buttonB.wakeUp();
             player.status = PL_STATUS.STAND;
         }
     },
@@ -480,67 +706,64 @@ tm.define("GameScene", {
                 totalFrame++;
                 totalSec = Math.floor(totalFrame / app.fps);
 
+                // 家の発生
+                // ターゲットかどうかの判定
+                var isTarget = tm.util.Random.randint(0, 10) == 0 ? true : false;
+                houseCounter += (BASE_SPD + spdOfs[player.nowLaneX]);
+                if (houseCounter <= -128) {
+                    var kind = 0;
+                    var xofs = houseCounter + 128;
+                    houseCounter = xofs;
+                    var house = House(++uidCounter, kind, -xofs, isTarget);
+                    house.addChildTo(group1);
+                    houseArray.push(house);
+                    if (isTarget) {
+                        var arrow = Arrow(++uidCounter, xofs);
+                        arrow.addChildTo(group1);
+                        arrowArray.push(house);
+                    }
+                }
+
+                // 敵の発生
                 if (totalFrame % 60 === 0) {
+                    // 敵の数の決定
                     this.enemyNum = -1;
                     var rnd = tm.util.Random.randint(1, 10);
                     // 敵発生数の決定
                     if (totalSec < 30) {
                         this.enemyNum = 1;
-                    } else if (totalSec < 60) {
-                        if (rnd === 1) this.enemyNum = 2;
-                        else this.enemyNum = 1;
-                    } else if (totalSec < 90) {
-                        if (rnd === 1) this.enemyNum = 3;
-                        else if (rnd === 2) this.enemyNum = 2;
-                        else this.enemyNum = 1;
                     } else {
-                        if (rnd === 1) this.enemyNum = 4;
-                        else if (rnd === 2) this.enemyNum = 3;
-                        else if (rnd === 3) this.enemyNum = 2;
-                        else this.enemyNum = 1;
+                        this.enemyNum = 1;
                     }
 
+                    // 敵の種類の決定
                     (this.enemyNum).times(function () {
                         // 敵種別の決定
-                        this.enemyKind = -1;
-                        if (this.tmpSec < 5) this.enemyKind = 0;
-                        else if (this.tmpSec < 10) this.enemyKind = 1;
-                        else if (this.tmpSec < 15) this.enemyKind = 2;
-                        else if (this.tmpSec < 20) this.enemyKind = 3;
-                        else if (this.tmpSec < 25) this.enemyKind = 4;
-                        else if (this.tmpSec < 30) this.enemyKind = 5;
-                        else if (this.tmpSec < 35) this.enemyKind = tm.util.Random.randint(0, 2);
-                        else if (this.tmpSec < 40) this.enemyKind = tm.util.Random.randint(2, 4);
-                        else if (this.tmpSec < 45) this.enemyKind = tm.util.Random.randint(3, 5);
-                        else if (this.tmpSec < 50) {
-                            var tmpRnd = tm.util.Random.randint(0, 2);
-                            if (tmpRnd == 0) this.enemyKind = 0;
-                            else if (tmpRnd == 1) this.enemyKind = 2;
-                            else this.enemyKind = 4;
-                        } else {
-                            var tmpRnd = tm.util.Random.randint(0, 2);
-                            if (tmpRnd == 0) this.enemyKind = 1;
-                            else if (tmpRnd == 1) this.enemyKind = 3;
-                            else this.enemyKind = 5;
-                        }
-                        var enemy = Enemy(++uidCounter, this.enemyKind);
-
-                        enemy.addChildTo(group1);
+                        var enemyKind = -1;
+                        if (this.tmpSec < 10) enemyKind = 0;
+                        else if (this.tmpSec < 20) enemyKind = 1;
+                        else if (this.tmpSec < 30) enemyKind = 2;
+                        else if (this.tmpSec < 40) enemyKind = 3;
+                        else enemyKind = 4;
+                        //                        enemyKind = 4;
+                        var enemy = Enemy(++uidCounter, enemyKind);
+                        enemy.addChildTo(group3);
                         enemyArray.push(enemy);
                     }, this);
                 }
+
                 if (player.status === PL_STATUS.SHOT) {
                     if (++player.moveCounter >= 5) {
                         player.status = PL_STATUS.STAND;
-                        var shuriken = PlayerShuriken(++uidCounter, player.y);
-                        shuriken.addChildTo(group1);
-                        plShurikenArray.push(shuriken);
+                        var package = Package(++uidCounter, player.x, player.y);
+                        package.addChildTo(group4);
+                        packageArray.push(package);
                     }
                 }
             }
             this.nowScoreLabel.text = nowScore;
-            if (shurikenLeft < 999) this.shurikenLeftLabel.text = shurikenLeft;
-            else this.shurikenLeftLabel.text = 999;
+            if (packageLeft < 999) this.packageLeftLabel.text = packageLeft;
+            else this.packageLeftLabel.text = 999;
 
             // 当たり判定
             checkPlShurikenToEnemy();
@@ -555,16 +778,19 @@ tm.define("GameScene", {
                 this.tweetButton.onclick = function () {
                     var twitterURL = tm.social.Twitter.createURL({
                         type: "tweet",
-                        text: "SHRKN NG-NG スコア: " + self.nowScoreLabel.text,
+                        text: "T.T. スコア: " + self.nowScoreLabel.text,
                         hashtags: ["ネムレス", "NEMLESSS"],
-                        url: "https://iwasaku.github.io/test3/SHU/index.html",
+                        url: "https://iwasaku.github.io/test9/TT/index.html",
                     });
                     window.open(twitterURL);
                 };
 
-                this.upButton.sleep();
-                this.downButton.sleep();
-                this.aButton.sleep();
+                this.keyUp.sleep();
+                this.keyDown.sleep();
+                this.keyLeft.sleep();
+                this.keyRight.sleep();
+                this.buttonA.sleep();
+                this.buttonB.sleep();
             }
             this.buttonAlpha += 0.05;
             if (this.buttonAlpha > 1.0) {
@@ -577,7 +803,6 @@ tm.define("GameScene", {
                 this.restartButton.wakeUp();
             }
         }
-        this.shurikenLeftSprite.rotation += 10;
     }
 });
 
@@ -604,49 +829,83 @@ tm.define("Player", {
             }
         });
 
-        this.superInit(ss, 100, 100);
+        this.superInit(ss, 128, 128);
         this.direct = '';
         this.zRot = 0;
-        this.setPosition(64, floorYPos[1]).setScale(1, 1);
+        this.nowLaneX = 4;
+        this.nowLaneY = 2;
+        this.nextLaneX = this.nowLaneX;
+        this.nextLaneY = this.nowLaneY;
+        this.setPosition(lanePosX[this.nowLaneX], lanePosY[this.nowLaneY]).setScale(1, 1);
         this.setInteractive(false);
         this.setBoundingType("rect");
 
         this.status = PL_STATUS.INIT;
         this.moveCounter = 0;
-        this.nowFloor = 1;
-        this.nextFloor = 1;
         this.gotoAndPlay("stand");
     },
-
 
     update: function (app) {
         if (this.status === PL_STATUS.INIT) return;
 
-        if ((this.status === PL_STATUS.MOVE_UP) || (this.status === PL_STATUS.MOVE_DOWN)) {
-            var ofs = 0;
-            if (this.status === PL_STATUS.MOVE_UP) ofs = moveUpOffset[this.moveCounter]
-            else ofs = moveDownOffset[this.moveCounter]
-            this.y = floorYPos[this.nowFloor] + ofs;
-            if (ofs < 0) this.zRot = -16;
-            if (ofs > 0) {
-                this.zRot += 2;
-                if (this.zRot > 35) this.zRot = 35;
-            }
-            if (++this.moveCounter >= 15) {
+        if (this.status.isMove) {
+            if (this.status.isMoveX) this.x = lanePosX[this.nowLaneX] + this.status.ofs_table[this.moveCounter];
+            else this.y = lanePosY[this.nowLaneY] + this.status.ofs_table[this.moveCounter];
+            if (++this.moveCounter >= 11) {
                 this.status = PL_STATUS.STAND;
-                this.nowFloor = this.nextFloor;
-                this.y = floorYPos[this.nowFloor];
-                this.zRot = 0;
+                this.nowLaneX = this.nextLaneX;
+                this.nowLaneY = this.nextLaneY;
+                this.x = lanePosX[this.nowLaneX];
+                this.y = lanePosY[this.nowLaneY];
+            }
+        } else {
+            if (this.status === PL_STATUS.JUMP) {
+                var maxY = 140.0 + 70.0;
+                var totalTime = 60;  // 60フレームでジャンプ終了
+                var halfTime = totalTime / 2;
+                var nowTime = this.moveCounter - halfTime;
+                var yOfs = -(maxY / (halfTime * halfTime)) * nowTime * nowTime + maxY;
+                this.y = lanePosY[this.nowLaneY] - yOfs;
+                if (++this.moveCounter >= totalTime) {
+                    this.moveCounter = 0;
+                    this.status = PL_STATUS.STAND;
+                    this.nowLaneX = this.nextLaneX;
+                    this.nowLaneY = this.nextLaneY;
+                    this.x = lanePosX[this.nowLaneX];
+                    this.y = lanePosY[this.nowLaneY];
+                }
             }
         }
-        this.rotation = this.zRot;
     },
 });
 
 /*
- * PlayerShuriken
+ * Package
  */
-tm.define("PlayerShuriken", {
+tm.define("Package", {
+    superClass: "tm.app.Sprite",
+
+    init: function (uid, xPos, yPos) {
+        this.superInit("package", 64, 64);
+        this.uid = uid;
+        this.direct = '';
+        this.zRot = 0;
+        this.setPosition(xPos, yPos).setScale(1, 1);
+        this.setInteractive(false);
+        this.setBoundingType("rect");
+        this.isDead = Boolean(0);
+    },
+
+    update: function (app) {
+        if (player.status.isDead) return;
+        this.y -= 20;
+        // 画面端から出た?
+        if (this.y <= 0 - 80) {
+            packageArray.erase(this);
+            this.remove();
+        }
+
+    },
 });
 
 /*
@@ -656,80 +915,32 @@ tm.define("Enemy", {
     superClass: "tm.app.Sprite",
 
     init: function (uid, kind) {
+        var tmpDir = 1;
+        if (tm.util.Random.randint(0, 1) == 0) {
+            tmpDir = -1;
+        }
         this.spriteName = "";
-        this.point = "";
         switch (kind) {
             case 0:
-                // 普通
-                this.spriteName = "utena5";
-                this.point = 1;
-                this.shuriken = 2;
-                this.xSpd = -4;
-                this.life = 1;
-                this.laneChangeCounterLimit = 0;
-                this.laneChangeCounter = 0;
-                this.attackCounterLimit = (totalSec < 90) ? 120 : 80;
-                this.attackCounter = tm.util.Random.randint(0, this.attackCounterLimit);
+                this.spriteName = "ymt";
+                this.xSpd = 16 * tmpDir;
                 break;
             case 1:
-                // 早い
-                this.spriteName = "utena2";
-                this.point = 2;
-                this.shuriken = 2;
-                this.xSpd = -7;
-                this.life = 1;
-                this.laneChangeCounterLimit = 0;
-                this.laneChangeCounter = 0;
-                this.attackCounterLimit = (totalSec < 90) ? 90 : 60;
-                this.attackCounter = tm.util.Random.randint(0, this.attackCounterLimit);
+                this.spriteName = "jp";
+                this.xSpd = 15 * tmpDir;
                 break;
             case 2:
-                // 頻繁にレーンチェンジ
-                this.spriteName = "utena7";
-                this.point = 3;
-                this.shuriken = 5;
-                this.xSpd = -6;
-                this.life = 1;
-                this.laneChangeCounterLimit = 30;
-                this.laneChangeCounter = tm.util.Random.randint(0, this.laneChangeCounterLimit);
-                this.attackCounterLimit = (totalSec < 90) ? 60 : 40;
-                this.attackCounter = tm.util.Random.randint(0, this.attackCounterLimit);
+                this.spriteName = "fdx";
+                this.xSpd = 14 * tmpDir;
                 break;
             case 3:
-                // 固くて遅い
-                this.spriteName = "utena1";
-                this.point = 4;
-                this.shuriken = 20;
-                this.xSpd = -1;
-                this.life = 5;
-                this.laneChangeCounterLimit = 0;
-                this.laneChangeCounter = 0;
-                this.attackCounterLimit = (totalSec < 90) ? 120 : 80;
-                this.attackCounter = tm.util.Random.randint(0, this.attackCounterLimit);
+                this.spriteName = "dhl";
+                this.xSpd = 13 * tmpDir;
                 break;
             case 4:
-                // 稀にレーンチェンジ
-                this.spriteName = "utena6";
-                this.point = 5;
-                this.shuriken = 10;
-                this.xSpd = -3;
-                this.life = 2;
-                this.laneChangeCounterLimit = (totalSec < 90) ? 60 : 40;
-                this.laneChangeCounter = tm.util.Random.randint(0, this.laneChangeCounterLimit);
-                this.attackCounterLimit = 0;
-                this.attackCounter = 0;
-                break;
-            case 5:
-                // 手裏剣に当たるとレーンチェンジ
-                this.spriteName = "utena3";
-                this.point = 6;
-                this.shuriken = 10;
-                this.xSpd = -5;
-                this.life = 3;
-                this.laneChangeCounterLimit = 0;
-                this.laneChangeCounter = 0;
-                this.attackCounterLimit = 0;
-                this.attackCounter = 0;
+                this.spriteName = "pkg";
+                tmpDir = 1;
+                this.xSpd = BASE_SPD;
                 break;
             default:
                 console.log('Unknown enemy kind');
@@ -737,9 +948,14 @@ tm.define("Enemy", {
 
         }
         this.superInit(this.spriteName, 128, 128);
+        this.setScale(tmpDir, 1);
         this.direct = '';
         this.setInteractive(false);
         this.setBoundingType("rect");
+
+        this.laneChangeCounterLimit = 0;
+        this.laneChangeCounter = 0;
+        this.yOfsCounter = 0;
         this.moveCounter = 0;
         this.mutekiCounter = 0;
         this.isHit = Boolean(0);
@@ -747,9 +963,15 @@ tm.define("Enemy", {
         this.uid = uid;
         this.kind = kind;
         this.vec = tm.geom.Vector2(0, 0);
-        this.nowFloor = tm.util.Random.randint(0, 2);
-        this.nextFloor = this.nowFloor;
-        this.position.set(SCREEN_WIDTH + 64, floorYPos[this.nowFloor]);
+        this.nowLaneY = tm.util.Random.randint(0, 4);
+        this.nextLaneY = this.nowLaneY;
+        if (tm.util.Random.randint(0, 1) == 0) {
+            // 左から
+            this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY]);
+        } else {
+            // 右から
+            this.position.set(0 - 64, lanePosY[this.nowLaneY]);
+        }
         this.counter = 0;
         this.status = EN_STATUS.MOVE_FORWARD;
     },
@@ -762,89 +984,11 @@ tm.define("Enemy", {
         switch (this.kind) {
             case 0:
             case 1:
-            case 3:
-                this.vec.x = this.xSpd;
-                this.position.add(this.vec);
-                break;
             case 2:
+            case 3:
             case 4:
-                if ((this.status === EN_STATUS.MOVE_UP) || (this.status === EN_STATUS.MOVE_DOWN)) {
-                    var ofs = 0;
-                    if (this.status === EN_STATUS.MOVE_UP) ofs = moveUpOffset[this.moveCounter]
-                    else ofs = moveDownOffset[this.moveCounter]
-                    this.y = floorYPos[this.nowFloor] + ofs;
-                    if (++this.moveCounter >= 15) {
-                        this.moveCounter = 0;
-                        this.status = EN_STATUS.MOVE_FORWARD;
-                        this.nowFloor = this.nextFloor;
-                        this.y = floorYPos[this.nowFloor];
-                    }
-                } else {
-                    this.vec.x = this.xSpd;
-                    this.position.add(this.vec);
-                    if (++this.laneChangeCounter > this.laneChangeCounterLimit) {
-                        this.laneChangeCounter = 0;
-                        this.moveCounter = 0;
-                        if (this.nowFloor == 0) {
-                            this.nextFloor = 1;
-                            this.status = EN_STATUS.MOVE_UP;
-                        }
-                        if (this.nowFloor == 1) {
-                            if (tm.util.Random.randint(0, 1) == 0) {
-                                this.nextFloor = 2;
-                                this.status = EN_STATUS.MOVE_UP;
-                            } else {
-                                this.nextFloor = 0;
-                                this.status = EN_STATUS.MOVE_DOWN;
-                            }
-                        }
-                        if (this.nowFloor == 2) {
-                            this.nextFloor = 1;
-                            this.status = EN_STATUS.MOVE_DOWN;
-                        }
-                    }
-                }
-                break;
-            case 5:
-                if ((this.status === EN_STATUS.MOVE_UP) || (this.status === EN_STATUS.MOVE_DOWN)) {
-                    var ofs = 0;
-                    if (this.status === EN_STATUS.MOVE_UP) ofs = moveUpOffset[this.moveCounter]
-                    else ofs = moveDownOffset[this.moveCounter]
-                    this.y = floorYPos[this.nowFloor] + ofs;
-                    if (++this.moveCounter >= 15) {
-                        this.moveCounter = 0;
-                        this.status = EN_STATUS.MOVE_FORWARD;
-                        this.nowFloor = this.nextFloor;
-                        this.y = floorYPos[this.nowFloor];
-                    }
-                } else {
-                    this.vec.x = this.xSpd;
-                    this.position.add(this.vec);
-                    if (this.isHit) {
-                        this.moveCounter = 0;
-                        if (this.nowFloor == 0) {
-                            this.nextFloor = 1;
-                            this.status = EN_STATUS.MOVE_UP;
-                            this.mutekiCounter = 5;
-                        }
-                        if (this.nowFloor == 1) {
-                            if (tm.util.Random.randint(0, 1) == 0) {
-                                this.nextFloor = 2;
-                                this.status = EN_STATUS.MOVE_UP;
-                                this.mutekiCounter = 5;
-                            } else {
-                                this.nextFloor = 0;
-                                this.status = EN_STATUS.MOVE_DOWN;
-                                this.mutekiCounter = 10;
-                            }
-                        }
-                        if (this.nowFloor == 2) {
-                            this.nextFloor = 1;
-                            this.status = EN_STATUS.MOVE_DOWN;
-                            this.mutekiCounter = 10;
-                        }
-                    }
-                }
+                this.vec.x = this.xSpd + spdOfs[player.nowLaneX];
+                this.position.add(this.vec);
                 break;
             default:
                 console.log('Unknown enemy kind');
@@ -853,45 +997,161 @@ tm.define("Enemy", {
         this.isHit = Boolean(0);
         if (this.mutekiCounter > 0) this.mutekiCounter--;
 
-        // 攻撃
-        if (Math.floor(totalFrame / app.fps) > 60) {
-            switch (this.kind) {
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                    if (this.status === EN_STATUS.MOVE_FORWARD) {
-                        if (++this.attackCounter > this.attackCounterLimit) {
-                            this.attackCounter = 0;
-                            var eneShu = EnemyShuriken(++uidCounter, this.x, this.y);
-                            eneShu.addChildTo(group1);
-                            eneShurikenArray.push(eneShu);
-                        }
-                    }
-                    break;
-                case 4:
-                case 5:
-                    if ((this.status === EN_STATUS.MOVE_UP) || (this.status === EN_STATUS.MOVE_DOWN)) {
-                        if (this.moveCounter == 0) {
-                            var eneShu = EnemyShuriken(++uidCounter, this.x, this.y);
-                            eneShu.addChildTo(group1);
-                            eneShurikenArray.push(eneShu);
-                            var eneShu2 = EnemyShuriken(++uidCounter, this.x, this.y);
-                            eneShu2.addChildTo(group1);
-                            eneShurikenArray.push(eneShu2);
-                        }
-                    }
-                default:
-                    console.log('Unknown enemy kind');
-                    break;
+        // 画面内外チェック
+        if ((this.x <= 0 - 80) || (this.x >= SCREEN_WIDTH + 80)) {
+            // 画面端から出た?
+            enemyArray.erase(this);
+            this.remove();
+        } else {
+            // 当たり判定
+            var check = true;
+            if (player.status === PL_STATUS.JUMP) {
+                if (player.nowLaneY !== this.nowLaneY) {
+                    check = false;
+                } else if ((player.moveCounter >= 10) && (player.moveCounter <= 50)) {
+                    check = false;
+                }
+            }
+
+            if (check && chkCollision(this.x, this.y, 96, 96, player.x, player.y, 96, 96)) {
+                if (this.kind === 4) {
+                    packageLeft += 5;
+                    if (packageLeft >= 999) packageLeft += 999;
+                    coinSE.play();
+
+                    enemyArray.erase(this);
+                    this.remove();
+                } else {
+                    player.status = PL_STATUS.DEAD;
+                }
             }
         }
+    },
+});
 
-        // 画面左端から出た?
-        if (this.x < +64) {
-            enemyArray.erase(this);
-            //this.remove();
-            player.status = PL_STATUS.DEAD;
+/*
+ * house
+ */
+tm.define("House", {
+    superClass: "tm.app.Sprite",
+
+    init: function (uid, kind, xofs, isTaget) {
+        this.spriteName = "";
+        this.isTaget = isTaget;
+        switch (kind) {
+            case 0:
+                this.spriteName = "ymt";
+                break;
+            case 1:
+                this.spriteName = "jp";
+                break;
+            case 2:
+                this.spriteName = "fdx";
+                break;
+            case 3:
+                this.spriteName = "dhl";
+                break;
+            default:
+                console.log('Unknown enemy kind');
+                break;
+
+        }
+        this.superInit(this.spriteName, 128, 128);
+        this.direct = '';
+        this.setInteractive(false);
+        this.setBoundingType("rect");
+
+        this.isHit = Boolean(0);
+
+        this.uid = uid;
+        this.kind = kind;
+        this.vec = tm.geom.Vector2(0, 0);
+        this.xSpd = BASE_SPD;
+        this.position.set(SCREEN_WIDTH + 64 - xofs, 0 + 140 * 1);
+        this.counter = 0;
+        this.status = EN_STATUS.MOVE_FORWARD;
+    },
+
+    update: function (app) {
+        if (!player.status.isStart) return;
+        if (player.status.isDead) return;
+
+        // 移動
+        this.vec.x = this.xSpd + spdOfs[player.nowLaneX];
+        this.position.add(this.vec);
+        this.isHit = Boolean(0);
+
+        // 画面端から出た?
+        if (this.x <= 0 - 80) {
+            houseArray.erase(this);
+            this.remove();
+        }
+    },
+});
+
+/*
+ * Arrow
+ */
+tm.define("Arrow", {
+    superClass: "tm.app.Sprite",
+
+    init: function (uid, xofs) {
+        this.spriteName = "arrow";
+        this.superInit(this.spriteName, 128, 128);
+        this.direct = '';
+        this.setInteractive(false);
+        this.setBoundingType("rect");
+
+        this.uid = uid;
+        this.vec = tm.geom.Vector2(0, 0);
+        this.xSpd = BASE_SPD;
+        this.yOrg = 0 + 140 * 0;
+        this.yOfs = 0;
+        this.position.set(SCREEN_WIDTH + 64 - xofs, 0 + 140 * 0);
+        this.counter = 0;
+        this.status = EN_STATUS.MOVE_FORWARD;
+    },
+
+    update: function (app) {
+        if (player.status.isDead) return;
+
+        // 移動
+        if (++this.counter > 60) this.counter = 0;
+        if (this.counter == 0) {
+            this.yOfs = 0;
+        } else if (this.counter < 30) {
+            this.yOfs++;
+        } else {
+            this.yOfs--;
+        }
+        this.y = this.yOrg + this.yOfs;
+        this.vec.x = this.xSpd + spdOfs[player.nowLaneX];
+        this.position.add(this.vec);
+
+        // 画面端から出た?
+        if (this.x <= 0 - 80) {
+            arrowArray.erase(this);
+            this.remove();
+        }
+
+        // 当たり判定
+        for (var ii = 0; ii < packageArray.length; ii++) {
+            var tmp = packageArray[ii];
+            if (chkCollision(this.x, this.yOrg + 140, 128, 128, tmp.x, tmp.y, 64, 64)) {
+                arrowArray.erase(this);
+                this.remove();
+
+                packageArray.erase(tmp);
+                tmp.remove();
+
+                var tmpPnt = 10;
+                tmpPnt += (player.lanePosX - 4);   // 0〜8 → -4〜4
+                tmpPnt *= (player.lanePosY + 1);   // 0〜4 → 1〜5
+                nowScore += tmpPnt;
+
+                hitSE.play();
+                break;
+            }
         }
     },
 });
@@ -906,6 +1166,39 @@ function checkEneShurikenToPlayer() {
 
 // 
 function clearArrays() {
+    var self = this;
+
+    // 敵を消す
+    for (var ii = self.enemyArray.length - 1; ii >= 0; ii--) {
+        var tmp = self.enemyArray[ii];
+        if (tmp.parent == null) console.log("NULL!!");
+        else tmp.remove();
+        self.enemyArray.erase(tmp);
+    }
+
+    // 荷物を消す
+    for (var ii = self.packageArray.length - 1; ii >= 0; ii--) {
+        var tmp = self.packageArray[ii];
+        if (tmp.parent == null) console.log("NULL!!");
+        else tmp.remove();
+        self.packageArray.erase(tmp);
+    }
+
+    // 家を消す
+    for (var ii = self.houseArray.length - 1; ii >= 0; ii--) {
+        var tmp = self.houseArray[ii];
+        if (tmp.parent == null) console.log("NULL!!");
+        else tmp.remove();
+        self.houseArray.erase(tmp);
+    }
+
+    // 矢印を消す
+    for (var ii = self.arrowArray.length - 1; ii >= 0; ii--) {
+        var tmp = self.arrowArray[ii];
+        if (tmp.parent == null) console.log("NULL!!");
+        else tmp.remove();
+        self.arrowArray.erase(tmp);
+    }
 }
 
 // 絶対値を返す関数
@@ -931,4 +1224,21 @@ function myRandom(start, end) {
         }
         return (randomSeed % mod) + start;
     }
+}
+
+// 矩形当たり判定
+function chkCollision(rect_a_x, rect_a_y, rect_a_w, rect_a_h, rect_b_x, rect_b_y, rect_b_w, rect_b_h) {
+    // X軸、Y軸の距離
+    distance_x = abs(rect_a_x - rect_b_x);
+    distance_y = abs(rect_a_y - rect_b_y);
+
+    // ２つの矩形のX軸、Y軸のサイズの和を算出する
+    size_sum_x = (rect_a_w + rect_b_w) / 2.0;
+    size_sum_y = (rect_a_h + rect_b_h) / 2.0;
+
+    // サイズの和と距離を比較する
+    if ((distance_x < size_sum_x) && (distance_y < size_sum_y)) {
+        return true;
+    }
+    return false;
 }
