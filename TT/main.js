@@ -384,7 +384,7 @@ tm.define("TitleScene", {
                     fillStyle: "#fff",
                     fontSize: 64,
                     fontFamily: FONT_FAMILY,
-                    text: "TRNSPSNTRP",
+                    text: "T.T.",
                     align: "center",
                 },
                 {
