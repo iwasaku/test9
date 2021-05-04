@@ -1,20 +1,6 @@
-const fallSE = new Howl({
-    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/fall.mp3'
-});
-const coinSE = new Howl({
-    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
-});
-const hitSE = new Howl({
-    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
-});
-const jumpSE = new Howl({
-    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/jump.mp3'
-});
-const shotSE = new Howl({
-    src: 'https://iwasaku.github.io/test8/COKS/resource/explosion_0.mp3'
-});
-
+var FPS = 60;  // 60フレ
 // 横画面
+
 const SCREEN_WIDTH = 2436;              // スクリーン幅
 const SCREEN_HEIGHT = 1124;              // スクリーン高さ
 const SCREEN_CENTER_X = SCREEN_WIDTH / 2;   // スクリーン幅の半分
@@ -22,27 +8,48 @@ const SCREEN_CENTER_Y = SCREEN_HEIGHT / 2;  // スクリーン高さの半分
 
 const FONT_FAMILY = "'misaki_gothic','Meiryo',sans-serif";
 var ASSETS = {
-    "player": "./resource/angus_128_anim.png",
-    "package": "./resource/shuriken.png",
+    "player": "./resource/sgw_amin_t_r_128.png",
+    "package": "./resource/package_t_r_64.png",
 
-    "house_0": "./resource/planet_128.png",
-    "house_1": "./resource/planet_128.png",
-    "house_2": "./resource/planet_128.png",
-    "house_3": "./resource/planet_128.png",
+    "house_1": "./resource/house_01.png",
+    "house_2": "./resource/house_02.png",
+    "house_3": "./resource/house_03.png",
+    "house_4": "./resource/house_04.png",
+    "house_5": "./resource/house_05.png",
+    "house_6": "./resource/house_06.png",
+    "house_7": "./resource/house_07.png",
+    "house_8": "./resource/house_08.png",
 
-    "arrow": "./resource/arrow_d_128.png",
+    "arrow": "./resource/arrow_t.png",
 
-    "ymt": "./resource/utena1.png",
-    "jp": "./resource/utena2.png",
-    "fdx": "./resource/utena3.png",
-    "dhl": "./resource/utena4.png",
-    "pkg": "./resource/shuriken.png",
+    "ymt": "./resource/ymt_amin_t_r_128.png",
+    "jp": "./resource/jp_amin_t_r_128.png",
+    "fdx": "./resource/fdx_amin_t_r_128.png",
+    "dhl": "./resource/dhl_amin_t_r_128.png",
+    "pkg": "./resource/package_amin_t_r_64.png",
 
-    "bg_sky": "./resource/bg_gra.png",
-    "bg_road": "./resource/bg_gra.png",
-    "fg_rain_0": "./resource/bg_front.png",
-    "fg_rain_1": "./resource/bg_back.png",
+    "bg_sky": "./resource/bg_sky_gra.png",
+    "bg_road": "./resource/bg_road_t.png",
+    "fg_rain": "./resource/fg_rain_amin.png",
 };
+
+const fallSE = new Howl({
+    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/fall.mp3'
+});
+const coinSE = new Howl({
+    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
+});
+const hitSE = new Howl({
+    //    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
+    src: 'https://iwasaku.github.io/test9/TT/resource/crrect_answer1.mp3'
+});
+const jumpSE = new Howl({
+    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/jump.mp3'
+});
+const shotSE = new Howl({
+    //    src: 'https://iwasaku.github.io/test8/COKS/resource/explosion_0.mp3'
+    src: 'https://iwasaku.github.io/test9/TT/resource/laser1.mp3'
+});
 
 // 定義
 var PL_STATUS = defineEnum({
@@ -211,6 +218,13 @@ var EN_STATUS = defineEnum({
         canAction: Boolean(0),
         string: 'down'
     },
+    STOP: {
+        value: 4,
+        isStart: Boolean(0),
+        isDead: Boolean(1),
+        canAction: Boolean(0),
+        string: 'dead'
+    },
     DEAD: {
         value: 4,
         isStart: Boolean(0),
@@ -231,6 +245,18 @@ const lanePosX = [
     SCREEN_CENTER_X + (140 * 1) + 140 * 2,
     SCREEN_CENTER_X + (140 * 1) + 140 * 3,    // 高速（前方の敵：高速、後方の敵：低速）
 ];
+const lanePosBonusX = [
+    -8,
+    -4,
+    -2,
+    -1,
+    0,
+    1,
+    2,
+    4,
+    8,
+];
+
 const spdOfs = [
     4 * 2,
     3 * 2,
@@ -243,15 +269,18 @@ const spdOfs = [
     -4 * 2,
 ];
 const lanePosY = [
-    // 空（矢印）
-    // 家
-    // 歩道
     0 + 140 * 3,    // レーン0
     0 + 140 * 4,    // レーン1
     0 + 140 * 5,    // レーン2
     0 + 140 * 6,    // レーン3
     0 + 140 * 7,    // レーン4
-    // 歩道 or 家
+];
+const lanePosBonusY = [
+    1,    // レーン0
+    2,    // レーン1
+    4,    // レーン2
+    8,    // レーン3
+    16,    // レーン4
 ];
 
 var group0 = null;  // 背景
@@ -270,10 +299,12 @@ var uidCounter = 0;
 var nowScore = 0;
 var packageLeft = 5;
 var houseCounter = 0;
-var timeLeft = 50;
+var timeLeft = 0;
 var totalFrame = 0;
 var totalSec = 0;
 const BASE_SPD = -10;
+
+var bgRoadX = SCREEN_CENTER_X;
 
 var randomSeed = 3557;
 var randomMode = Boolean(0);
@@ -284,7 +315,7 @@ tm.main(function () {
     app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);    // サイズ(解像度)設定
     app.fitWindow();                            // 自動フィッティング有効
     app.background = "rgba(77, 136, 255, 1.0)"; // 背景色
-    app.fps = 60;                               // フレーム数
+    app.fps = FPS;                              // フレーム数
 
     var loading = tm.ui.LoadingScene({
         assets: ASSETS,
@@ -401,14 +432,16 @@ tm.define("GameScene", {
         group5 = tm.display.CanvasElement().addChildTo(this);   // 雨
         group6 = tm.display.CanvasElement().addChildTo(this);
 
-        this.bgGradation = tm.display.Sprite("bg_sky", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
-        this.bgGradation.setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
-        this.bgGradation = tm.display.Sprite("bg_road", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
-        this.bgGradation.setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
-        this.fgRain0 = tm.display.Sprite("fg_rain_0", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group5);
-        this.fgRain0.setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
-        this.fgRain1 = tm.display.Sprite("fg_rain_1", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group5);
-        this.fgRain1.setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
+        this.bgGradation = tm.display.Sprite("bg_sky", SCREEN_WIDTH, 280).addChildTo(group0);
+        this.bgGradation.setPosition(SCREEN_CENTER_X, 140);
+
+        this.bgRoad0 = tm.display.Sprite("bg_road", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
+        this.bgRoad0.setPosition(bgRoadX, SCREEN_CENTER_Y - 80);
+        this.bgRoad1 = tm.display.Sprite("bg_road", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
+        this.bgRoad1.setPosition(bgRoadX + SCREEN_WIDTH, SCREEN_CENTER_Y - 80);
+
+        this.fgRain0 = new Rain(0,).addChildTo(group5);
+        this.fgRain1 = new Rain(SCREEN_WIDTH).addChildTo(group5);
 
         clearArrays();
         player = new Player().addChildTo(group4);
@@ -417,18 +450,6 @@ tm.define("GameScene", {
             children: [
                 {
                     type: "Label", name: "nowScoreLabel",
-                    x: SCREEN_WIDTH - 16,
-                    y: 32,
-                    fillStyle: "#fff",
-                    shadowColor: "#000",
-                    shadowBlur: 10,
-                    fontSize: 64,
-                    fontFamily: FONT_FAMILY,
-                    text: "0",
-                    align: "right",
-                },
-                {
-                    type: "Label", name: "packageLeftLabel",
                     x: 0 + 16,
                     y: 32,
                     fillStyle: "#fff",
@@ -436,7 +457,19 @@ tm.define("GameScene", {
                     shadowBlur: 10,
                     fontSize: 64,
                     fontFamily: FONT_FAMILY,
-                    text: "10",
+                    text: "SCORE:0",
+                    align: "left",
+                },
+                {
+                    type: "Label", name: "packageLeftLabel",
+                    x: 0 + 16,
+                    y: 80,
+                    fillStyle: "#fff",
+                    shadowColor: "#000",
+                    shadowBlur: 10,
+                    fontSize: 64,
+                    fontFamily: FONT_FAMILY,
+                    text: "0",
                     align: "left",
                 },
                 {
@@ -446,7 +479,7 @@ tm.define("GameScene", {
                     fillStyle: "#fff",
                     shadowColor: "#000",
                     shadowBlur: 10,
-                    fontSize: 96,
+                    fontSize: 128,
                     fontFamily: FONT_FAMILY,
                     text: "0",
                     align: "center",
@@ -591,6 +624,9 @@ tm.define("GameScene", {
             ]
         });
 
+        this.shurikenLeftSprite = tm.display.Sprite("package").addChildTo(group2);
+        this.shurikenLeftSprite.setPosition(0 + 128, 80).setScale(0.9, 0.9);
+
         this.tweetButton.sleep();
         this.restartButton.sleep();
 
@@ -641,7 +677,7 @@ tm.define("GameScene", {
             if (packageLeft <= 0) return;
             player.status = PL_STATUS.SHOT;
             player.moveCounter = 0;
-            player.gotoAndPlay("shot");
+            shotSE.play();
             packageLeft--;
         };
 
@@ -651,6 +687,7 @@ tm.define("GameScene", {
             player.status = PL_STATUS.JUMP;
             player.moveCounter = 0;
             jumpSE.play();
+            player.gotoAndPlay("jump");
         };
 
         this.buttonAlpha = 0.0;
@@ -659,6 +696,8 @@ tm.define("GameScene", {
         packageLeft = 10;
         houseCounter = 0;
         totalFrame = 0;
+        timeLeft = 60 * FPS;
+        randomSeed = 3557;
 
         this.frame = 0;
 
@@ -666,9 +705,8 @@ tm.define("GameScene", {
 
         //　最初の家を表示
         for (var ii = 20; ii >= 0; ii--) {
-            var kind = 0;
+            var kind = myRandom(1, 8);  // house_01〜08なので
             var house = House(++uidCounter, kind, 128 * ii, false);
-            console.log(house.x);
             house.addChildTo(group1);
             houseArray.push(house);
         }
@@ -694,6 +732,7 @@ tm.define("GameScene", {
             this.buttonA.wakeUp();
             this.buttonB.wakeUp();
             player.status = PL_STATUS.STAND;
+            player.gotoAndPlay("run");
         }
     },
 
@@ -701,17 +740,27 @@ tm.define("GameScene", {
         if (!player.status.isDead) {
             if (player.status.isStart) {
                 this.frame++;
+                timeLeft--;
                 this.tmpSec = Math.floor(this.frame / app.fps);
-                if (this.tmpSec > 60) this.frame = 0;
+                if (this.tmpSec > FPS) this.frame = 0;
                 totalFrame++;
                 totalSec = Math.floor(totalFrame / app.fps);
 
+                // 道路のスクロール
+                bgRoadX += (BASE_SPD + spdOfs[player.nowLaneX]);
+                if (bgRoadX < -SCREEN_CENTER_X) bgRoadX += SCREEN_WIDTH;
+                this.bgRoad0.setPosition(bgRoadX, SCREEN_CENTER_Y - 80);
+                this.bgRoad1.setPosition(bgRoadX + SCREEN_WIDTH, SCREEN_CENTER_Y - 80);
+
+                this.fgRain0.setPosition(bgRoadX, SCREEN_CENTER_Y - 80);
+                this.fgRain1.setPosition(bgRoadX + SCREEN_WIDTH, SCREEN_CENTER_Y - 80);
+
                 // 家の発生
                 // ターゲットかどうかの判定
-                var isTarget = tm.util.Random.randint(0, 10) == 0 ? true : false;
+                var isTarget = myRandom(0, 9) == 0 ? true : false; // 1/10の確率で配達先
                 houseCounter += (BASE_SPD + spdOfs[player.nowLaneX]);
                 if (houseCounter <= -128) {
-                    var kind = 0;
+                    var kind = myRandom(1, 8);  // house_01〜08なので
                     var xofs = houseCounter + 128;
                     houseCounter = xofs;
                     var house = House(++uidCounter, kind, -xofs, isTarget);
@@ -725,10 +774,9 @@ tm.define("GameScene", {
                 }
 
                 // 敵の発生
-                if (totalFrame % 60 === 0) {
+                if (totalFrame % FPS === 0) {
                     // 敵の数の決定
                     this.enemyNum = -1;
-                    var rnd = tm.util.Random.randint(1, 10);
                     // 敵発生数の決定
                     if (totalSec < 30) {
                         this.enemyNum = 1;
@@ -744,8 +792,8 @@ tm.define("GameScene", {
                         else if (this.tmpSec < 20) enemyKind = 1;
                         else if (this.tmpSec < 30) enemyKind = 2;
                         else if (this.tmpSec < 40) enemyKind = 3;
-                        else enemyKind = 4;
-                        //                        enemyKind = 4;
+                        else enemyKind = myRandom(0, 3);
+                        if (myRandom(0, 9) === 0) enemyKind = 4;
                         var enemy = Enemy(++uidCounter, enemyKind);
                         enemy.addChildTo(group3);
                         enemyArray.push(enemy);
@@ -761,8 +809,14 @@ tm.define("GameScene", {
                     }
                 }
             }
-            this.nowScoreLabel.text = nowScore;
-            if (packageLeft < 999) this.packageLeftLabel.text = packageLeft;
+            if (timeLeft < 0) {
+                timeLeft = 0;
+                player.status = PL_STATUS.DEAD;
+                player.gotoAndPlay("stand");
+            }
+            this.timeLeftLabel.text = Math.floor(timeLeft / app.fps);
+            this.nowScoreLabel.text = "SCORE:" + nowScore;
+            if (packageLeft < 999) this.packageLeftLabel.text = "     x" + packageLeft;
             else this.packageLeftLabel.text = 999;
 
             // 当たり判定
@@ -807,6 +861,54 @@ tm.define("GameScene", {
 });
 
 /*
+* Rain
+*/
+tm.define("Rain", {
+    superClass: "tm.app.AnimationSprite",
+
+    init: function (ofs) {
+        var ss = tm.asset.SpriteSheet({
+            // 画像
+            image: "fg_rain",
+            // １コマのサイズ指定および全コマ数
+            frame: {
+                width: 350,
+                height: 196,
+                count: 7
+            },
+            // アニメーションの定義（開始コマ、終了コマ、次のアニメーション）
+            animations: {
+                "start": [0, 6, "start", 10],
+            }
+        });
+
+        this.superInit(ss, SCREEN_WIDTH, SCREEN_HEIGHT);
+        this.setPosition(SCREEN_CENTER_X + ofs, SCREEN_CENTER_Y).setScale(1, 1);
+        this.setInteractive(false);
+        this.alphaInc = true;
+        this.alpha = 0.1;
+
+        this.gotoAndPlay("start");
+    },
+
+    update: function (app) {
+        if (this.alphaInc) {
+            this.alpha += 0.01;
+            if (this.alpha >= 0.5) {
+                this.alpha = 0.5;
+                this.alphaInc = false;
+            }
+        } else {
+            this.alpha -= 0.01;
+            if (this.alpha <= 0.1) {
+                this.alpha = 0.1;
+                this.alphaInc = true;
+            }
+        }
+    },
+});
+
+/*
  * Player
  */
 tm.define("Player", {
@@ -820,12 +922,13 @@ tm.define("Player", {
             frame: {
                 width: 128,
                 height: 128,
-                count: 3
+                count: 11
             },
             // アニメーションの定義（開始コマ、終了コマ、次のアニメーション）
             animations: {
-                "stand": [0, 2, "stand", 10],
-                "shot": [1, 3, "stand", 5],
+                "stand": [1, 2, "stand", 60],
+                "run": [0, 2, "run", 10],
+                "jump": [0, 1, "jump", 60],
             }
         });
 
@@ -869,6 +972,7 @@ tm.define("Player", {
                 if (++this.moveCounter >= totalTime) {
                     this.moveCounter = 0;
                     this.status = PL_STATUS.STAND;
+                    this.gotoAndPlay("run");
                     this.nowLaneX = this.nextLaneX;
                     this.nowLaneY = this.nextLaneY;
                     this.x = lanePosX[this.nowLaneX];
@@ -912,43 +1016,60 @@ tm.define("Package", {
  * Enemey
  */
 tm.define("Enemy", {
-    superClass: "tm.app.Sprite",
+    superClass: "tm.app.AnimationSprite",
 
     init: function (uid, kind) {
         var tmpDir = 1;
-        if (tm.util.Random.randint(0, 1) == 0) {
+        if (myRandom(0, 1) == 0) {
             tmpDir = -1;
         }
         this.spriteName = "";
         switch (kind) {
             case 0:
                 this.spriteName = "ymt";
-                this.xSpd = 16 * tmpDir;
+                this.xSpd = -16 * tmpDir;
                 break;
             case 1:
                 this.spriteName = "jp";
-                this.xSpd = 15 * tmpDir;
+                this.xSpd = -15 * tmpDir;
                 break;
             case 2:
                 this.spriteName = "fdx";
-                this.xSpd = 14 * tmpDir;
+                this.xSpd = -14 * tmpDir;
                 break;
             case 3:
                 this.spriteName = "dhl";
-                this.xSpd = 13 * tmpDir;
+                this.xSpd = -13 * tmpDir;
                 break;
             case 4:
                 this.spriteName = "pkg";
-                tmpDir = 1;
+                tmpDir = 1; // 必ず右から
                 this.xSpd = BASE_SPD;
                 break;
             default:
                 console.log('Unknown enemy kind');
                 break;
-
         }
-        this.superInit(this.spriteName, 128, 128);
-        this.setScale(tmpDir, 1);
+
+        var ss = tm.asset.SpriteSheet({
+            // 画像
+            image: this.spriteName,
+            // １コマのサイズ指定および全コマ数
+            frame: {
+                width: 128,
+                height: 128,
+                count: 11
+            },
+            // アニメーションの定義（開始コマ、終了コマ、次のアニメーション）
+            animations: {
+                "stand": [1, 2, "stand", 60],
+                "run": [0, 2, "run", 10],
+                "jump": [0, 1, "jump", 60],
+            }
+        });
+
+        this.superInit(ss, 128, 128);
+        this.setScale(-tmpDir, 1);
         this.direct = '';
         this.setInteractive(false);
         this.setBoundingType("rect");
@@ -963,21 +1084,35 @@ tm.define("Enemy", {
         this.uid = uid;
         this.kind = kind;
         this.vec = tm.geom.Vector2(0, 0);
-        this.nowLaneY = tm.util.Random.randint(0, 4);
+        this.nowLaneY = myRandom(0, 4);
         this.nextLaneY = this.nowLaneY;
-        if (tm.util.Random.randint(0, 1) == 0) {
-            // 左から
-            this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY]);
-        } else {
+        if (tmpDir === 1) {
             // 右から
+            var pkgOfs = (kind === 4) ? 32 : 0;
+            this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY] + pkgOfs);
+        } else {
+            // 左から
             this.position.set(0 - 64, lanePosY[this.nowLaneY]);
         }
         this.counter = 0;
         this.status = EN_STATUS.MOVE_FORWARD;
+        if (this.kind === 4) {
+            this.gotoAndPlay("jump");
+        } else {
+            this.gotoAndPlay("run");
+        }
     },
 
     update: function (app) {
-        if (player.status.isDead) return;
+        if (player.status.isDead) {
+            if (this.status != EN_STATUS.STOP) {
+                this.status = EN_STATUS.STOP;
+                if (this.kind != 4) {
+                    this.gotoAndPlay("stand");
+                }
+            }
+            return;
+        }
         if (this.status.isDead) return;
 
         // 移動
@@ -1012,7 +1147,6 @@ tm.define("Enemy", {
                     check = false;
                 }
             }
-
             if (check && chkCollision(this.x, this.y, 96, 96, player.x, player.y, 96, 96)) {
                 if (this.kind === 4) {
                     packageLeft += 5;
@@ -1023,11 +1157,14 @@ tm.define("Enemy", {
                     this.remove();
                 } else {
                     player.status = PL_STATUS.DEAD;
+                    player.gotoAndPlay("stand");
                 }
             }
         }
     },
 });
+
+
 
 /*
  * house
@@ -1038,24 +1175,7 @@ tm.define("House", {
     init: function (uid, kind, xofs, isTaget) {
         this.spriteName = "";
         this.isTaget = isTaget;
-        switch (kind) {
-            case 0:
-                this.spriteName = "ymt";
-                break;
-            case 1:
-                this.spriteName = "jp";
-                break;
-            case 2:
-                this.spriteName = "fdx";
-                break;
-            case 3:
-                this.spriteName = "dhl";
-                break;
-            default:
-                console.log('Unknown enemy kind');
-                break;
-
-        }
+        this.spriteName = "house_" + kind;
         this.superInit(this.spriteName, 128, 128);
         this.direct = '';
         this.setInteractive(false);
@@ -1069,7 +1189,6 @@ tm.define("House", {
         this.xSpd = BASE_SPD;
         this.position.set(SCREEN_WIDTH + 64 - xofs, 0 + 140 * 1);
         this.counter = 0;
-        this.status = EN_STATUS.MOVE_FORWARD;
     },
 
     update: function (app) {
@@ -1145,10 +1264,10 @@ tm.define("Arrow", {
                 tmp.remove();
 
                 var tmpPnt = 10;
-                tmpPnt += (player.lanePosX - 4);   // 0〜8 → -4〜4
-                tmpPnt *= (player.lanePosY + 1);   // 0〜4 → 1〜5
+                tmpPnt += lanePosBonusX[player.nowLaneX];   // 0〜8 → -8〜8
+                tmpPnt *= lanePosBonusY[player.nowLaneY];   // 0〜4 → 1〜16
                 nowScore += tmpPnt;
-
+                timeLeft += 5 * FPS;
                 hitSE.play();
                 break;
             }
@@ -1227,6 +1346,7 @@ function myRandom(start, end) {
 }
 
 // 矩形当たり判定
+// https://yttm-work.jp/collision/collision_0005.html
 function chkCollision(rect_a_x, rect_a_y, rect_a_w, rect_a_h, rect_b_x, rect_b_y, rect_b_w, rect_b_h) {
     // X軸、Y軸の距離
     distance_x = abs(rect_a_x - rect_b_x);
