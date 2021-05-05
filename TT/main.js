@@ -30,7 +30,7 @@ var ASSETS = {
     "pkg": "./resource/package_anim_t_r_128.png",
 
     "bg_sky": "./resource/bg_sky_gra.png",
-    "bg_road": "./resource/bg_road_t.png",
+    "bg_road": "./resource/bg_road_t.png?202105051653",
     "fg_rain": "./resource/fg_rain_amin.png",
 };
 const PACKAGE_KIND = 5;  // 小包を表す敵種別
