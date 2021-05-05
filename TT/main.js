@@ -26,12 +26,14 @@ var ASSETS = {
     "jp": "./resource/jp_amin_t_r_128.png",
     "fdx": "./resource/fdx_amin_t_r_128.png",
     "dhl": "./resource/dhl_amin_t_r_128.png",
-    "pkg": "./resource/package_amin_t_r_64.png",
+    "prkn": "./resource/prkn_anim_t_r_128.png",
+    "pkg": "./resource/package_anim_t_r_128.png",
 
     "bg_sky": "./resource/bg_sky_gra.png",
     "bg_road": "./resource/bg_road_t.png",
     "fg_rain": "./resource/fg_rain_amin.png",
 };
+const PACKAGE_KIND = 5;  // 小包を表す敵種別
 
 const fallSE = new Howl({
     src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/fall.mp3'
@@ -40,14 +42,15 @@ const coinSE = new Howl({
     src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
 });
 const hitSE = new Howl({
-    //    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
     src: 'https://iwasaku.github.io/test9/TT/resource/crrect_answer1.mp3'
+});
+const missSE = new Howl({
+    src: 'https://iwasaku.github.io/test9/TT/resource/blip02.mp3'
 });
 const jumpSE = new Howl({
     src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/jump.mp3'
 });
 const shotSE = new Howl({
-    //    src: 'https://iwasaku.github.io/test8/COKS/resource/explosion_0.mp3'
     src: 'https://iwasaku.github.io/test9/TT/resource/laser1.mp3'
 });
 
@@ -235,15 +238,15 @@ var EN_STATUS = defineEnum({
 });
 
 const lanePosX = [
-    SCREEN_CENTER_X + (140 * 1) - 140 * 5,    // 低速（前方の敵：低速、後方の敵：高速）
+    SCREEN_CENTER_X + (140 * 1) - 140 * 7,    // 低速（前方の敵：低速、後方の敵：高速）
+    SCREEN_CENTER_X + (140 * 1) - 140 * 6,
+    SCREEN_CENTER_X + (140 * 1) - 140 * 5,
     SCREEN_CENTER_X + (140 * 1) - 140 * 4,
     SCREEN_CENTER_X + (140 * 1) - 140 * 3,
     SCREEN_CENTER_X + (140 * 1) - 140 * 2,
     SCREEN_CENTER_X + (140 * 1) - 140 * 1,
-    SCREEN_CENTER_X + (140 * 1) - 140 * 0,
-    SCREEN_CENTER_X + (140 * 1) + 140 * 1,
-    SCREEN_CENTER_X + (140 * 1) + 140 * 2,
-    SCREEN_CENTER_X + (140 * 1) + 140 * 3,    // 高速（前方の敵：高速、後方の敵：低速）
+    SCREEN_CENTER_X + (140 * 1) + 140 * 0,
+    SCREEN_CENTER_X + (140 * 1) + 140 * 1,    // 高速（前方の敵：高速、後方の敵：低速）
 ];
 const lanePosBonusX = [
     -8,
@@ -778,11 +781,9 @@ tm.define("GameScene", {
                     // 敵の数の決定
                     this.enemyNum = -1;
                     // 敵発生数の決定
-                    if (totalSec < 30) {
-                        this.enemyNum = 1;
-                    } else {
-                        this.enemyNum = 1;
-                    }
+                    if (totalSec < 30) this.enemyNum = 1;
+                    else if (totalSec < 60) this.enemyNum = 2;
+                    else this.enemyNum = 3;
 
                     // 敵の種類の決定
                     (this.enemyNum).times(function () {
@@ -792,8 +793,9 @@ tm.define("GameScene", {
                         else if (this.tmpSec < 20) enemyKind = 1;
                         else if (this.tmpSec < 30) enemyKind = 2;
                         else if (this.tmpSec < 40) enemyKind = 3;
-                        else enemyKind = myRandom(0, 3);
-                        if (myRandom(0, 9) === 0) enemyKind = 4;
+                        else if (this.tmpSec < 50) enemyKind = 4;
+                        else enemyKind = myRandom(0, 4);
+                        if (myRandom(0, 9) === 0) enemyKind = PACKAGE_KIND;
                         var enemy = Enemy(++uidCounter, enemyKind);
                         enemy.addChildTo(group3);
                         enemyArray.push(enemy);
@@ -1005,6 +1007,8 @@ tm.define("Package", {
         this.y -= 20;
         // 画面端から出た?
         if (this.y <= 0 - 80) {
+            timeLeft -= 5 * FPS;
+            missSE.play();
             packageArray.erase(this);
             this.remove();
         }
@@ -1026,22 +1030,26 @@ tm.define("Enemy", {
         this.spriteName = "";
         switch (kind) {
             case 0:
-                this.spriteName = "ymt";
-                this.xSpd = -16 * tmpDir;
+                this.spriteName = "prkn";
+                this.xSpd = -13 * tmpDir;
                 break;
             case 1:
                 this.spriteName = "jp";
-                this.xSpd = -15 * tmpDir;
+                this.xSpd = -14 * tmpDir;
                 break;
             case 2:
-                this.spriteName = "fdx";
-                this.xSpd = -14 * tmpDir;
+                this.spriteName = "ymt";
+                this.xSpd = -16 * tmpDir;
                 break;
             case 3:
                 this.spriteName = "dhl";
-                this.xSpd = -13 * tmpDir;
+                this.xSpd = -18 * tmpDir;
                 break;
             case 4:
+                this.spriteName = "fdx";
+                this.xSpd = -20 * tmpDir;
+                break;
+            case 5:
                 this.spriteName = "pkg";
                 tmpDir = 1; // 必ず右から
                 this.xSpd = BASE_SPD;
@@ -1088,28 +1096,26 @@ tm.define("Enemy", {
         this.nextLaneY = this.nowLaneY;
         if (tmpDir === 1) {
             // 右から
-            var pkgOfs = (kind === 4) ? 32 : 0;
-            this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY] + pkgOfs);
+            if (kind === PACKAGE_KIND) {
+                this.setScale(0.5, 0.5);
+                this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY] + 32);
+            } else {
+                this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY]);
+            }
         } else {
             // 左から
             this.position.set(0 - 64, lanePosY[this.nowLaneY]);
         }
         this.counter = 0;
         this.status = EN_STATUS.MOVE_FORWARD;
-        if (this.kind === 4) {
-            this.gotoAndPlay("jump");
-        } else {
-            this.gotoAndPlay("run");
-        }
+        this.gotoAndPlay("run");
     },
 
     update: function (app) {
         if (player.status.isDead) {
             if (this.status != EN_STATUS.STOP) {
                 this.status = EN_STATUS.STOP;
-                if (this.kind != 4) {
-                    this.gotoAndPlay("stand");
-                }
+                this.gotoAndPlay("stand");
             }
             return;
         }
@@ -1148,7 +1154,7 @@ tm.define("Enemy", {
                 }
             }
             if (check && chkCollision(this.x, this.y, 96, 96, player.x, player.y, 96, 96)) {
-                if (this.kind === 4) {
+                if (this.kind === PACKAGE_KIND) {
                     packageLeft += 5;
                     if (packageLeft >= 999) packageLeft += 999;
                     coinSE.play();
