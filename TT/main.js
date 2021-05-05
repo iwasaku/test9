@@ -828,7 +828,9 @@ tm.define("GameScene", {
                         else if (this.tmpSec < 50) enemyKind = 4;
                         else enemyKind = myRandom(0, 4);
                         if (myRandom(0, 9) === 0) enemyKind = PACKAGE_KIND;
-                        var enemy = Enemy(++uidCounter, enemyKind);
+                        var fromRight = (myRandom(0, 1) === 0);
+                        if (totalSec <= 60) fromRight = true;
+                        var enemy = Enemy(++uidCounter, enemyKind, fromRight);
                         enemy.addChildTo(group3);
                         enemyArray.push(enemy);
                     }, this);
@@ -852,10 +854,6 @@ tm.define("GameScene", {
             this.nowScoreLabel.text = "SCORE:" + nowScore;
             if (packageLeft < 999) this.packageLeftLabel.text = "     x" + packageLeft;
             else this.packageLeftLabel.text = 999;
-
-            // 当たり判定
-            checkPlShurikenToEnemy();
-            checkEneShurikenToPlayer();
         } else {
             if (!this.stopBGM) {
                 fallSE.play();
@@ -1054,11 +1052,8 @@ tm.define("Package", {
 tm.define("Enemy", {
     superClass: "tm.app.AnimationSprite",
 
-    init: function (uid, kind) {
-        var tmpDir = 1;
-        if (myRandom(0, 1) == 0) {
-            tmpDir = -1;
-        }
+    init: function (uid, kind, fromRight) {
+        var tmpDir = fromRight ? 1 : -1;
         this.spriteName = "";
         switch (kind) {
             case 0:
@@ -1170,7 +1165,7 @@ tm.define("Enemy", {
                 // 上下端で反転
                 if (!this.status.isMove) {
                     if (--this.moveWaitCounter <= 0) {
-                        this.moveWaitCounter = myRandom(0, 10) * 0.1 * FPS;
+                        this.moveWaitCounter = myRandom(5, 45) * 0.1 * FPS;
                         if (this.isMoveUp) {
                             // 上
                             if (--this.nextLaneY < 0) {
@@ -1210,7 +1205,7 @@ tm.define("Enemy", {
                 // ランダム
                 if (!this.status.isMove) {
                     if (--this.moveWaitCounter <= 0) {
-                        this.moveWaitCounter = myRandom(0, 20) * 0.1 * FPS;
+                        this.moveWaitCounter = myRandom(5, 30) * 0.1 * FPS;
                         if (myRandom(0, 1) === 0) {
                             // 上
                             if (--this.nextLaneY < 0) {
@@ -1392,14 +1387,6 @@ tm.define("Arrow", {
         }
     },
 });
-
-// プレイヤー手裏剣と敵との当たり判定
-function checkPlShurikenToEnemy() {
-}
-
-// 敵手裏剣とプレイヤーとの当たり判定
-function checkEneShurikenToPlayer() {
-}
 
 // 
 function clearArrays() {
