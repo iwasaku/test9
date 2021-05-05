@@ -818,8 +818,8 @@ tm.define("GameScene", {
                     // 敵の数の決定
                     this.enemyNum = -1;
                     // 敵発生数の決定
-                    if (totalSec < 30) this.enemyNum = 1;
-                    else if (totalSec < 60) this.enemyNum = 2;
+                    if (totalSec < 60) this.enemyNum = 1;
+                    else if (totalSec < 120) this.enemyNum = 2;
                     else this.enemyNum = 3;
 
                     // 敵の種類の決定
@@ -1040,9 +1040,9 @@ tm.define("Package", {
     update: function (app) {
         if (player.status.isDead) return;
         this.y -= 20;
-        // 画面端から出た?
+        // 画面上端から出た?
         if (this.y <= 0 - 80) {
-            timeLeft -= 5 * FPS;
+            timeLeft -= 2 * FPS;
             missSE.play();
             packageArray.erase(this);
             this.remove();
