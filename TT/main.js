@@ -197,6 +197,7 @@ var EN_STATUS = defineEnum({
         value: 0,
         isStart: Boolean(0),
         isDead: Boolean(0),
+        isMove: Boolean(0),
         canAction: Boolean(0),
         string: 'init'
     },
@@ -204,6 +205,7 @@ var EN_STATUS = defineEnum({
         value: 1,
         isStart: Boolean(1),
         isDead: Boolean(0),
+        isMove: Boolean(0),
         canAction: Boolean(1),
         string: 'forward'
     },
@@ -211,20 +213,49 @@ var EN_STATUS = defineEnum({
         value: 2,
         isStart: Boolean(1),
         isDead: Boolean(0),
+        isMove: Boolean(1),
         canAction: Boolean(0),
+        ofs_table: [
+            0,
+            -14,
+            -28,
+            -42,
+            -56,
+            -70,
+            -84,
+            -98,
+            -112,
+            -126,
+            -140,
+        ],
         string: 'up'
     },
     MOVE_DOWN: {
         value: 3,
         isStart: Boolean(1),
         isDead: Boolean(0),
+        isMove: Boolean(1),
         canAction: Boolean(0),
+        ofs_table: [
+            0,
+            14,
+            28,
+            42,
+            56,
+            70,
+            84,
+            98,
+            112,
+            126,
+            140,
+        ],
         string: 'down'
     },
     STOP: {
         value: 4,
         isStart: Boolean(0),
         isDead: Boolean(1),
+        isMove: Boolean(0),
         canAction: Boolean(0),
         string: 'dead'
     },
@@ -232,6 +263,7 @@ var EN_STATUS = defineEnum({
         value: 4,
         isStart: Boolean(0),
         isDead: Boolean(1),
+        isMove: Boolean(0),
         canAction: Boolean(0),
         string: 'dead'
     },
@@ -1106,6 +1138,10 @@ tm.define("Enemy", {
             // 左から
             this.position.set(0 - 64, lanePosY[this.nowLaneY]);
         }
+
+        this.isMoveUp = (myRandom(0, 1) === 0);
+        this.moveWaitCounter = 0;
+
         this.counter = 0;
         this.status = EN_STATUS.MOVE_FORWARD;
         this.gotoAndPlay("run");
@@ -1124,11 +1160,86 @@ tm.define("Enemy", {
         // 移動
         switch (this.kind) {
             case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
             case 5:
+                // 直進
+                this.vec.x = this.xSpd + spdOfs[player.nowLaneX];
+                this.position.add(this.vec);
+                break;
+            case 1:
+            case 3:
+                // 上下端で反転
+                if (!this.status.isMove) {
+                    if (--this.moveWaitCounter <= 0) {
+                        this.moveWaitCounter = myRandom(0, 10) * 0.1 * FPS;
+                        if (this.isMoveUp) {
+                            // 上
+                            if (--this.nextLaneY < 0) {
+                                this.nextLaneY = 1;
+                                this.isMoveUp = false;
+                                this.status = EN_STATUS.MOVE_DOWN;
+                            } else {
+                                this.status = EN_STATUS.MOVE_UP;
+                            }
+                            this.moveCounter = 0;
+                        } else {
+                            // 下
+                            if (++this.nextLaneY > 4) {
+                                this.nextLaneY = 3;
+                                this.isMoveUp = true;
+                                this.status = EN_STATUS.MOVE_UP;
+                            } else {
+                                this.status = EN_STATUS.MOVE_DOWN;
+                            }
+                        }
+                        this.moveCounter = 0;
+                    }
+                }
+                if (this.status.isMove) {
+                    this.y = lanePosY[this.nowLaneY] + this.status.ofs_table[this.moveCounter];
+                    if (++this.moveCounter >= 10) {
+                        this.status = EN_STATUS.MOVE_FORWARD;
+                        this.nowLaneY = this.nextLaneY;
+                        this.y = lanePosY[this.nowLaneY];
+                    }
+                }
+                this.vec.x = this.xSpd + spdOfs[player.nowLaneX];
+                this.position.add(this.vec);
+                break;
+            case 2:
+            case 4:
+                // ランダム
+                if (!this.status.isMove) {
+                    if (--this.moveWaitCounter <= 0) {
+                        this.moveWaitCounter = myRandom(0, 20) * 0.1 * FPS;
+                        if (myRandom(0, 1) === 0) {
+                            // 上
+                            if (--this.nextLaneY < 0) {
+                                this.nextLaneY = 1;
+                                this.status = EN_STATUS.MOVE_DOWN;
+                            } else {
+                                this.status = EN_STATUS.MOVE_UP;
+                            }
+                            this.moveCounter = 0;
+                        } else {
+                            // 下
+                            if (++this.nextLaneY > 4) {
+                                this.nextLaneY = 3;
+                                this.status = EN_STATUS.MOVE_UP;
+                            } else {
+                                this.status = EN_STATUS.MOVE_DOWN;
+                            }
+                        }
+                        this.moveCounter = 0;
+                    }
+                }
+                if (this.status.isMove) {
+                    this.y = lanePosY[this.nowLaneY] + this.status.ofs_table[this.moveCounter];
+                    if (++this.moveCounter >= 10) {
+                        this.status = EN_STATUS.MOVE_FORWARD;
+                        this.nowLaneY = this.nextLaneY;
+                        this.y = lanePosY[this.nowLaneY];
+                    }
+                }
                 this.vec.x = this.xSpd + spdOfs[player.nowLaneX];
                 this.position.add(this.vec);
                 break;
