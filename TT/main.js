@@ -1128,6 +1128,7 @@ tm.define("Enemy", {
             case 2:
             case 3:
             case 4:
+            case 5:
                 this.vec.x = this.xSpd + spdOfs[player.nowLaneX];
                 this.position.add(this.vec);
                 break;
