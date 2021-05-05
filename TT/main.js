@@ -331,7 +331,9 @@ var enemyArray = [];
 var houseArray = [];
 var arrowArray = [];
 var uidCounter = 0;
+var prknCounter = 0;
 var nowScore = 0;
+var nowDeliveryCount = 0;
 var packageLeft = 5;
 var houseCounter = 0;
 var timeLeft = 0;
@@ -727,7 +729,10 @@ tm.define("GameScene", {
 
         this.buttonAlpha = 0.0;
 
+        uidCounter = 0;
+        prknCounter = 0;
         nowScore = 0;
+        nowDeliveryCount = 0;
         packageLeft = 10;
         houseCounter = 0;
         totalFrame = 0;
@@ -864,9 +869,9 @@ tm.define("GameScene", {
                 this.tweetButton.onclick = function () {
                     var twitterURL = tm.social.Twitter.createURL({
                         type: "tweet",
-                        text: "T.T. スコア: " + self.nowScoreLabel.text,
+                        text: "T.T. スコア: " + nowScore + " (" + nowDeliveryCount + "軒に配達)",
                         hashtags: ["ネムレス", "NEMLESSS"],
-                        url: "https://iwasaku.github.io/test9/TT/index.html",
+                        url: "https://iwasaku.github.io/test9/TT/",
                     });
                     window.open(twitterURL);
                 };
@@ -1119,7 +1124,15 @@ tm.define("Enemy", {
         this.uid = uid;
         this.kind = kind;
         this.vec = tm.geom.Vector2(0, 0);
-        this.nowLaneY = myRandom(0, 4);
+        if (kind == 0) {
+            if ((++prknCounter % 2) === 0) {
+                this.nowLaneY = player.nowLaneY;
+            } else {
+                this.nowLaneY = myRandom(0, 4);
+            }
+        } else {
+            this.nowLaneY = myRandom(0, 4);
+        }
         this.nextLaneY = this.nowLaneY;
         if (tmpDir === 1) {
             // 右から
@@ -1165,28 +1178,30 @@ tm.define("Enemy", {
                 // 上下端で反転
                 if (!this.status.isMove) {
                     if (--this.moveWaitCounter <= 0) {
-                        this.moveWaitCounter = myRandom(5, 45) * 0.1 * FPS;
-                        if (this.isMoveUp) {
-                            // 上
-                            if (--this.nextLaneY < 0) {
-                                this.nextLaneY = 1;
-                                this.isMoveUp = false;
-                                this.status = EN_STATUS.MOVE_DOWN;
+                        this.moveWaitCounter = myRandom(5, 40) * 0.1 * FPS;
+                        if ((this.kind != 3) || (this.nowLaneY != player.nowLaneY)) {
+                            if (this.isMoveUp) {
+                                // 上
+                                if (--this.nextLaneY < 0) {
+                                    this.nextLaneY = 1;
+                                    this.isMoveUp = false;
+                                    this.status = EN_STATUS.MOVE_DOWN;
+                                } else {
+                                    this.status = EN_STATUS.MOVE_UP;
+                                }
+                                this.moveCounter = 0;
                             } else {
-                                this.status = EN_STATUS.MOVE_UP;
+                                // 下
+                                if (++this.nextLaneY > 4) {
+                                    this.nextLaneY = 3;
+                                    this.isMoveUp = true;
+                                    this.status = EN_STATUS.MOVE_UP;
+                                } else {
+                                    this.status = EN_STATUS.MOVE_DOWN;
+                                }
                             }
                             this.moveCounter = 0;
-                        } else {
-                            // 下
-                            if (++this.nextLaneY > 4) {
-                                this.nextLaneY = 3;
-                                this.isMoveUp = true;
-                                this.status = EN_STATUS.MOVE_UP;
-                            } else {
-                                this.status = EN_STATUS.MOVE_DOWN;
-                            }
                         }
-                        this.moveCounter = 0;
                     }
                 }
                 if (this.status.isMove) {
@@ -1206,25 +1221,27 @@ tm.define("Enemy", {
                 if (!this.status.isMove) {
                     if (--this.moveWaitCounter <= 0) {
                         this.moveWaitCounter = myRandom(5, 30) * 0.1 * FPS;
-                        if (myRandom(0, 1) === 0) {
-                            // 上
-                            if (--this.nextLaneY < 0) {
-                                this.nextLaneY = 1;
-                                this.status = EN_STATUS.MOVE_DOWN;
+                        if ((this.kind != 4) || (this.nowLaneY != player.nowLaneY)) {
+                            if (myRandom(0, 1) === 0) {
+                                // 上
+                                if (--this.nextLaneY < 0) {
+                                    this.nextLaneY = 1;
+                                    this.status = EN_STATUS.MOVE_DOWN;
+                                } else {
+                                    this.status = EN_STATUS.MOVE_UP;
+                                }
+                                this.moveCounter = 0;
                             } else {
-                                this.status = EN_STATUS.MOVE_UP;
+                                // 下
+                                if (++this.nextLaneY > 4) {
+                                    this.nextLaneY = 3;
+                                    this.status = EN_STATUS.MOVE_UP;
+                                } else {
+                                    this.status = EN_STATUS.MOVE_DOWN;
+                                }
                             }
                             this.moveCounter = 0;
-                        } else {
-                            // 下
-                            if (++this.nextLaneY > 4) {
-                                this.nextLaneY = 3;
-                                this.status = EN_STATUS.MOVE_UP;
-                            } else {
-                                this.status = EN_STATUS.MOVE_DOWN;
-                            }
                         }
-                        this.moveCounter = 0;
                     }
                 }
                 if (this.status.isMove) {
@@ -1381,6 +1398,7 @@ tm.define("Arrow", {
                 tmpPnt *= lanePosBonusY[player.nowLaneY];   // 0〜4 → 1〜16
                 nowScore += tmpPnt;
                 timeLeft += 5 * FPS;
+                nowDeliveryCount++;
                 hitSE.play();
                 break;
             }
