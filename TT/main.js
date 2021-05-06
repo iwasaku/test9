@@ -835,7 +835,7 @@ tm.define("GameScene", {
                         spdRate = 1.2;
                     } else {
                         this.enemyNum = 3;
-                        spdRate = 1.3;
+                        spdRate = 1.2;
                     }
                     // 敵の種類の決定
                     (this.enemyNum).times(function () {
