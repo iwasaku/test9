@@ -782,7 +782,7 @@ tm.define("GameScene", {
         if (!player.status.isDead) {
             if (player.status.isStart) {
                 this.frame++;
-                //                timeLeft--;
+                timeLeft--;
                 this.tmpSec = Math.floor(this.frame / app.fps);
                 if (this.tmpSec > FPS) this.frame = 0;
                 totalFrame++;
