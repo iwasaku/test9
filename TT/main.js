@@ -782,7 +782,7 @@ tm.define("GameScene", {
         if (!player.status.isDead) {
             if (player.status.isStart) {
                 this.frame++;
-                timeLeft--;
+                //                timeLeft--;
                 this.tmpSec = Math.floor(this.frame / app.fps);
                 if (this.tmpSec > FPS) this.frame = 0;
                 totalFrame++;
@@ -817,17 +817,26 @@ tm.define("GameScene", {
 
                 // 敵の発生
                 var tmpInterval;
-                if (totalSec < 60) tmpInterval = 3 * FPS; // 3秒ごとに発生
+                if (totalSec < 60) tmpInterval = 2.5 * FPS; // 2.5秒ごとに発生
                 else if (totalSec < 120) tmpInterval = 2 * FPS; // 2秒ごとに発生
                 else tmpInterval = 1 * FPS; // 1秒ごとに発生
                 if ((totalFrame % tmpInterval) === 0) {
                     // 敵の数の決定
                     this.enemyNum = -1;
-                    // 敵発生数の決定
-                    if (totalSec < 60) this.enemyNum = 1;
-                    else if (totalSec < 120) this.enemyNum = 2;
-                    else this.enemyNum = 3;
-
+                    var spdRate = 1.0;
+                    if (totalSec < 60) {
+                        this.enemyNum = 1;
+                        spdRate = 1.0;
+                    } else if (totalSec < 120) {
+                        this.enemyNum = 2;
+                        spdRate = 1.3;
+                    } else if (totalSec < 180) {
+                        this.enemyNum = 2;
+                        spdRate = 1.2;
+                    } else {
+                        this.enemyNum = 3;
+                        spdRate = 1.3;
+                    }
                     // 敵の種類の決定
                     (this.enemyNum).times(function () {
                         // 敵種別の決定
@@ -847,7 +856,7 @@ tm.define("GameScene", {
                         }
                         var fromRight = (myRandom(0, 1) === 0);
                         if (totalSec <= 60) fromRight = true;
-                        var enemy = Enemy(++uidCounter, enemyKind, fromRight);
+                        var enemy = Enemy(++uidCounter, enemyKind, fromRight, spdRate);
                         enemy.addChildTo(group3);
                         enemyArray.push(enemy);
                     }, this);
@@ -1069,29 +1078,29 @@ tm.define("Package", {
 tm.define("Enemy", {
     superClass: "tm.app.AnimationSprite",
 
-    init: function (uid, kind, fromRight) {
+    init: function (uid, kind, fromRight, spdRate) {
         var tmpDir = fromRight ? 1 : -1;
         this.spriteName = "";
         switch (kind) {
             case 0:
                 this.spriteName = "prkn";
-                this.xSpd = (BASE_SPD - 1) * tmpDir;
+                this.xSpd = (BASE_SPD - 1) * spdRate * tmpDir;
                 break;
             case 1:
                 this.spriteName = "jp";
-                this.xSpd = (BASE_SPD - 2) * tmpDir;
+                this.xSpd = (BASE_SPD - 2) * spdRate * tmpDir;
                 break;
             case 2:
                 this.spriteName = "ymt";
-                this.xSpd = (BASE_SPD - 3) * tmpDir;
+                this.xSpd = (BASE_SPD - 3) * spdRate * tmpDir;
                 break;
             case 3:
                 this.spriteName = "dhl";
-                this.xSpd = (BASE_SPD - 4) * tmpDir;
+                this.xSpd = (BASE_SPD - 4) * spdRate * tmpDir;
                 break;
             case 4:
                 this.spriteName = "fdx";
-                this.xSpd = (BASE_SPD - 5) * tmpDir;
+                this.xSpd = (BASE_SPD - 5) * spdRate * tmpDir;
                 break;
             case 5:
                 this.spriteName = "pkg_s";
