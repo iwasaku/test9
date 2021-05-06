@@ -27,13 +27,15 @@ var ASSETS = {
     "fdx": "./resource/fdx_amin_t_r_128.png",
     "dhl": "./resource/dhl_amin_t_r_128.png",
     "prkn": "./resource/prkn_anim_t_r_128.png",
-    "pkg": "./resource/package_anim_t_r_128.png",
+    "pkg_s": "./resource/package_anim_t_r_128.png",
+    "pkg_l": "./resource/package_l_anim_t_r_128.png",
 
     "bg_sky": "./resource/bg_sky_gra.png",
     "bg_road": "./resource/bg_road_t.png?202105051653",
     "fg_rain": "./resource/fg_rain_amin.png",
 };
-const PACKAGE_KIND = 5;  // 小包を表す敵種別
+const PACKAGE_S_KIND = 5;  // 小包(S)を表す敵種別
+const PACKAGE_L_KIND = 6;  // 小包(L)を表す敵種別
 
 const fallSE = new Howl({
     src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/fall.mp3'
@@ -334,7 +336,7 @@ var uidCounter = 0;
 var prknCounter = 0;
 var nowScore = 0;
 var nowDeliveryCount = 0;
-var packageLeft = 5;
+var packageLeft = 0;
 var houseCounter = 0;
 var timeLeft = 0;
 var totalFrame = 0;
@@ -814,7 +816,11 @@ tm.define("GameScene", {
                 }
 
                 // 敵の発生
-                if (totalFrame % FPS === 0) {
+                var tmpInterval;
+                if (totalSec < 60) tmpInterval = 3 * FPS; // 3秒ごとに発生
+                else if (totalSec < 120) tmpInterval = 2 * FPS; // 2秒ごとに発生
+                else tmpInterval = 1 * FPS; // 1秒ごとに発生
+                if ((totalFrame % tmpInterval) === 0) {
                     // 敵の数の決定
                     this.enemyNum = -1;
                     // 敵発生数の決定
@@ -832,7 +838,13 @@ tm.define("GameScene", {
                         else if (this.tmpSec < 40) enemyKind = 3;
                         else if (this.tmpSec < 50) enemyKind = 4;
                         else enemyKind = myRandom(0, 4);
-                        if (myRandom(0, 9) === 0) enemyKind = PACKAGE_KIND;
+                        var pgkRate = packageLeft;
+                        if (pgkRate >= 9) pgkRate = 9;
+                        else if (pgkRate <= 4) pgkRate = 4;
+                        if (myRandom(0, pgkRate) === 0) {
+                            if (myRandom(0, 9) === 0) enemyKind = PACKAGE_S_KIND;
+                            else enemyKind = PACKAGE_L_KIND;
+                        }
                         var fromRight = (myRandom(0, 1) === 0);
                         if (totalSec <= 60) fromRight = true;
                         var enemy = Enemy(++uidCounter, enemyKind, fromRight);
@@ -1042,7 +1054,7 @@ tm.define("Package", {
         this.y -= 20;
         // 画面上端から出た?
         if (this.y <= 0 - 80) {
-            timeLeft -= 2 * FPS;
+            timeLeft -= 0.1 * FPS;
             missSE.play();
             packageArray.erase(this);
             this.remove();
@@ -1063,26 +1075,31 @@ tm.define("Enemy", {
         switch (kind) {
             case 0:
                 this.spriteName = "prkn";
-                this.xSpd = -13 * tmpDir;
+                this.xSpd = (BASE_SPD - 1) * tmpDir;
                 break;
             case 1:
                 this.spriteName = "jp";
-                this.xSpd = -14 * tmpDir;
+                this.xSpd = (BASE_SPD - 2) * tmpDir;
                 break;
             case 2:
                 this.spriteName = "ymt";
-                this.xSpd = -16 * tmpDir;
+                this.xSpd = (BASE_SPD - 3) * tmpDir;
                 break;
             case 3:
                 this.spriteName = "dhl";
-                this.xSpd = -18 * tmpDir;
+                this.xSpd = (BASE_SPD - 4) * tmpDir;
                 break;
             case 4:
                 this.spriteName = "fdx";
-                this.xSpd = -20 * tmpDir;
+                this.xSpd = (BASE_SPD - 5) * tmpDir;
                 break;
             case 5:
-                this.spriteName = "pkg";
+                this.spriteName = "pkg_s";
+                tmpDir = 1; // 必ず右から
+                this.xSpd = BASE_SPD;
+                break;
+            case 6:
+                this.spriteName = "pkg_l";
                 tmpDir = 1; // 必ず右から
                 this.xSpd = BASE_SPD;
                 break;
@@ -1136,7 +1153,7 @@ tm.define("Enemy", {
         this.nextLaneY = this.nowLaneY;
         if (tmpDir === 1) {
             // 右から
-            if (kind === PACKAGE_KIND) {
+            if (kind === PACKAGE_S_KIND) {
                 this.setScale(0.5, 0.5);
                 this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY] + 32);
             } else {
@@ -1169,6 +1186,7 @@ tm.define("Enemy", {
         switch (this.kind) {
             case 0:
             case 5:
+            case 6:
                 // 直進
                 this.vec.x = this.xSpd + spdOfs[player.nowLaneX];
                 this.position.add(this.vec);
@@ -1278,9 +1296,10 @@ tm.define("Enemy", {
                 }
             }
             if (check && chkCollision(this.x, this.y, 96, 96, player.x, player.y, 96, 96)) {
-                if (this.kind === PACKAGE_KIND) {
-                    packageLeft += 5;
-                    if (packageLeft >= 999) packageLeft += 999;
+                if ((this.kind === PACKAGE_S_KIND) || (this.kind === PACKAGE_L_KIND)) {
+                    if (this.kind === PACKAGE_S_KIND) packageLeft += 10;
+                    else packageLeft += 50;
+                    if (packageLeft >= 999) packageLeft = 999;
                     coinSE.play();
 
                     enemyArray.erase(this);
@@ -1393,9 +1412,9 @@ tm.define("Arrow", {
                 packageArray.erase(tmp);
                 tmp.remove();
 
-                var tmpPnt = 10;
-                tmpPnt += lanePosBonusX[player.nowLaneX];   // 0〜8 → -8〜8
-                tmpPnt *= lanePosBonusY[player.nowLaneY];   // 0〜4 → 1〜16
+                var tmpPnt = 10;    // 基準点
+                tmpPnt += lanePosBonusX[player.nowLaneX];   // 0〜8 → -8〜8 ※速度が早いほど高得点
+                tmpPnt *= lanePosBonusY[player.nowLaneY];   // 0〜4 → 1〜16 ※家との距離が遠いほど高得点
                 nowScore += tmpPnt;
                 timeLeft += 5 * FPS;
                 nowDeliveryCount++;
