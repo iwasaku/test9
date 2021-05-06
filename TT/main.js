@@ -827,15 +827,21 @@ tm.define("GameScene", {
                     if (totalSec < 60) {
                         this.enemyNum = 1;
                         spdRate = 1.0;
+                    } else if (totalSec < 90) {
+                        this.enemyNum = 1;
+                        spdRate = 1.1;
                     } else if (totalSec < 120) {
                         this.enemyNum = 2;
+                        spdRate = 1.2;
+                    } else if (totalSec < 150) {
+                        this.enemyNum = 1;
                         spdRate = 1.3;
                     } else if (totalSec < 180) {
                         this.enemyNum = 2;
-                        spdRate = 1.2;
+                        spdRate = 1.4;
                     } else {
                         this.enemyNum = 3;
-                        spdRate = 1.2;
+                        spdRate = 1.5;
                     }
                     // 敵の種類の決定
                     (this.enemyNum).times(function () {
