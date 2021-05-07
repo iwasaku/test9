@@ -352,7 +352,7 @@ tm.main(function () {
     // アプリケーションクラスを生成
     var app = tm.display.CanvasApp("#world");
     app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);    // サイズ(解像度)設定
-    app.fitWindow();                            // 自動フィッティング有効
+    app.fitWindow(false);                            // 自動フィッティング有効
     app.background = "rgba(77, 136, 255, 1.0)"; // 背景色
     app.fps = FPS;                              // フレーム数
 
@@ -921,6 +921,8 @@ tm.define("GameScene", {
                 this.restartButton.wakeUp();
             }
         }
+        //        app.resizeToFitScreen();
+        app.fitWindow(false);
     }
 });
 
