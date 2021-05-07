@@ -857,8 +857,8 @@ tm.define("GameScene", {
                         if (pgkRate >= 9) pgkRate = 9;
                         else if (pgkRate <= 4) pgkRate = 4;
                         if (myRandom(0, pgkRate) === 0) {
-                            if (myRandom(0, 9) === 0) enemyKind = PACKAGE_S_KIND;
-                            else enemyKind = PACKAGE_L_KIND;
+                            if (myRandom(0, 9) === 0) enemyKind = PACKAGE_L_KIND;
+                            else enemyKind = PACKAGE_S_KIND;
                         }
                         var fromRight = (myRandom(0, 1) === 0);
                         if (totalSec <= 60) fromRight = true;
