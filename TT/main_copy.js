@@ -454,7 +454,7 @@ tm.define("TitleScene", {
 
     update: function (app) {
         app.background = "rgba(0, 0, 0, 1.0)"; // 背景色
-        if (++fitWindowTimer % 15 === 0) app.fitWindow(false); // 手動フィッティング
+        app.fitWindow(false); // 手動フィッティング
     }
 });
 

@@ -341,6 +341,8 @@ var houseCounter = 0;
 var timeLeft = 0;
 var totalFrame = 0;
 var totalSec = 0;
+var fitWindowTimer = 0;
+
 const BASE_SPD = -10;
 
 var bgRoadX = SCREEN_CENTER_X;
@@ -352,7 +354,7 @@ tm.main(function () {
     // アプリケーションクラスを生成
     var app = tm.display.CanvasApp("#world");
     app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);    // サイズ(解像度)設定
-    app.fitWindow();                            // 自動フィッティング有効
+    app.fitWindow(false);                       // 手動フィッティング
     app.background = "rgba(77, 136, 255, 1.0)"; // 背景色
     app.fps = FPS;                              // フレーム数
 
@@ -403,6 +405,7 @@ tm.define("LogoScene", {
         // 時間が来たらタイトルへ
         //        if (++this.localTimer >= 5 * app.fps)
         this.app.replaceScene(TitleScene());
+        app.fitWindow(false);                            // 手動フィッティング
     }
 });
 
@@ -451,6 +454,7 @@ tm.define("TitleScene", {
 
     update: function (app) {
         app.background = "rgba(0, 0, 0, 1.0)"; // 背景色
+        app.fitWindow(false); // 手動フィッティング
     }
 });
 
@@ -740,6 +744,7 @@ tm.define("GameScene", {
         totalFrame = 0;
         timeLeft = 60 * FPS;
         randomSeed = 3557;
+        fitWindowTimer = 0;
 
         this.frame = 0;
 
@@ -779,6 +784,7 @@ tm.define("GameScene", {
     },
 
     update: function (app) {
+        if (++fitWindowTimer % 15 === 0) app.fitWindow(false);    // 手動フィッティング
         if (!player.status.isDead) {
             if (player.status.isStart) {
                 this.frame++;
