@@ -341,6 +341,8 @@ var houseCounter = 0;
 var timeLeft = 0;
 var totalFrame = 0;
 var totalSec = 0;
+var fitWindowTimer = 0;
+
 const BASE_SPD = -10;
 
 var bgRoadX = SCREEN_CENTER_X;
@@ -352,8 +354,7 @@ tm.main(function () {
     // アプリケーションクラスを生成
     var app = tm.display.CanvasApp("#world");
     app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);    // サイズ(解像度)設定
-    //app.fitWindow();                            // 自動フィッティング有効
-    //    myFitWindow();
+    app.fitWindow(false);                       // 手動フィッティング
     app.background = "rgba(77, 136, 255, 1.0)"; // 背景色
     app.fps = FPS;                              // フレーム数
 
@@ -404,7 +405,7 @@ tm.define("LogoScene", {
         // 時間が来たらタイトルへ
         //        if (++this.localTimer >= 5 * app.fps)
         this.app.replaceScene(TitleScene());
-        app.fitWindow(false);                            // フィッティング
+        app.fitWindow(false);                            // 手動フィッティング
     }
 });
 
@@ -453,7 +454,7 @@ tm.define("TitleScene", {
 
     update: function (app) {
         app.background = "rgba(0, 0, 0, 1.0)"; // 背景色
-        app.fitWindow(false);                            // フィッティング
+        if (++fitWindowTimer & 60 === 0) app.fitWindow(false); // 手動フィッティング
     }
 });
 
@@ -743,6 +744,7 @@ tm.define("GameScene", {
         totalFrame = 0;
         timeLeft = 60 * FPS;
         randomSeed = 3557;
+        fitWindowTimer = 0;
 
         this.frame = 0;
 
@@ -782,7 +784,7 @@ tm.define("GameScene", {
     },
 
     update: function (app) {
-        app.fitWindow(false);                            // フィッティング
+        if (++fitWindowTimer % 60 === 0) app.fitWindow(false);    // 手動フィッティング
         if (!player.status.isDead) {
             if (player.status.isStart) {
                 this.frame++;
@@ -925,8 +927,6 @@ tm.define("GameScene", {
                 this.restartButton.wakeUp();
             }
         }
-        //app.fitWindow(false);                            // 自動フィッティング有効
-        //        myFitWindow();
     }
 });
 
@@ -1525,30 +1525,3 @@ function chkCollision(rect_a_x, rect_a_y, rect_a_w, rect_a_h, rect_b_x, rect_b_y
     }
     return false;
 }
-
-/*
-function myFitWindow() {
-    var e = this.element;
-    var s = e.style;
-
-    s.position = "absolute";
-    s.margin = "auto";
-    s.left = "0px";
-    s.top = "0px";
-    s.bottom = "0px";
-    s.right = "0px";
-
-    var rateWidth = e.width / window.innerWidth;
-    var rateHeight = e.height / window.innerHeight;
-    var rate = e.height / e.width;
-
-    if (rateWidth > rateHeight) {
-        s.width = innerWidth + "px";
-        s.height = innerWidth * rate + "px";
-    }
-    else {
-        s.width = innerHeight / rate + "px";
-        s.height = innerHeight + "px";
-    }
-}
-*/
