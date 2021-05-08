@@ -352,7 +352,7 @@ tm.main(function () {
     // アプリケーションクラスを生成
     var app = tm.display.CanvasApp("#world");
     app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);    // サイズ(解像度)設定
-    app.fitWindow(false);                            // 自動フィッティング有効
+    //app.fitWindow();                            // 自動フィッティング有効
     //    myFitWindow();
     app.background = "rgba(77, 136, 255, 1.0)"; // 背景色
     app.fps = FPS;                              // フレーム数
@@ -404,6 +404,7 @@ tm.define("LogoScene", {
         // 時間が来たらタイトルへ
         //        if (++this.localTimer >= 5 * app.fps)
         this.app.replaceScene(TitleScene());
+        app.fitWindow(false);                            // フィッティング
     }
 });
 
@@ -452,6 +453,7 @@ tm.define("TitleScene", {
 
     update: function (app) {
         app.background = "rgba(0, 0, 0, 1.0)"; // 背景色
+        app.fitWindow(false);                            // フィッティング
     }
 });
 
@@ -780,6 +782,7 @@ tm.define("GameScene", {
     },
 
     update: function (app) {
+        app.fitWindow(false);                            // フィッティング
         if (!player.status.isDead) {
             if (player.status.isStart) {
                 this.frame++;
@@ -922,6 +925,7 @@ tm.define("GameScene", {
                 this.restartButton.wakeUp();
             }
         }
+        //app.fitWindow(false);                            // 自動フィッティング有効
         //        myFitWindow();
     }
 });
@@ -1523,7 +1527,6 @@ function chkCollision(rect_a_x, rect_a_y, rect_a_w, rect_a_h, rect_b_x, rect_b_y
 }
 
 /*
-*/
 function myFitWindow() {
     var e = this.element;
     var s = e.style;
@@ -1548,3 +1551,4 @@ function myFitWindow() {
         s.height = innerHeight + "px";
     }
 }
+*/
