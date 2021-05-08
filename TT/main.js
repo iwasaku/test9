@@ -319,6 +319,13 @@ const lanePosBonusY = [
     8,    // レーン3
     16,    // レーン4
 ];
+const lanePosPenaltyY = [
+    0.1,    // レーン0
+    0.25,   // レーン1
+    0.5,    // レーン2
+    1.5,    // レーン3
+    2.5,    // レーン4
+];
 
 var group0 = null;  // 背景
 var group1 = null;  // 家
@@ -1075,7 +1082,7 @@ tm.define("Package", {
         this.y -= 20;
         // 画面上端から出た?
         if (this.y <= 0 - 80) {
-            timeLeft -= 0.1 * FPS;
+            timeLeft -= lanePosPenaltyY[player.nowLaneY] * FPS;
             missSE.play();
             packageArray.erase(this);
             this.remove();
