@@ -454,7 +454,7 @@ tm.define("TitleScene", {
 
     update: function (app) {
         app.background = "rgba(0, 0, 0, 1.0)"; // 背景色
-        if (++fitWindowTimer & 60 === 0) app.fitWindow(false); // 手動フィッティング
+        if (++fitWindowTimer % 15 === 0) app.fitWindow(false); // 手動フィッティング
     }
 });
 
@@ -784,7 +784,7 @@ tm.define("GameScene", {
     },
 
     update: function (app) {
-        if (++fitWindowTimer % 60 === 0) app.fitWindow(false);    // 手動フィッティング
+        if (++fitWindowTimer % 15 === 0) app.fitWindow(false);    // 手動フィッティング
         if (!player.status.isDead) {
             if (player.status.isStart) {
                 this.frame++;
