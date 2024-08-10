@@ -1,60 +1,97 @@
+phina.globalize();
+
 var FPS = 60;  // 60フレ
-// 横画面
 
 const SCREEN_WIDTH = 2436;              // スクリーン幅
 const SCREEN_HEIGHT = 1124;              // スクリーン高さ
 const SCREEN_CENTER_X = SCREEN_WIDTH / 2;   // スクリーン幅の半分
 const SCREEN_CENTER_Y = SCREEN_HEIGHT / 2;  // スクリーン高さの半分
 
-const FONT_FAMILY = "'misaki_gothic','Meiryo',sans-serif";
+const FONT_FAMILY = "'Press Start 2P','Meiryo',sans-serif";
 var ASSETS = {
-    "player": "./resource/sgw_amin_t_r_128.png",
-    "package": "./resource/package_t_r_64.png",
+    image: {
+        "player": "./resource/sgw_amin_t_r_128.png",
+        "package": "./resource/package_t_r_64.png",
 
-    "house_1": "./resource/house_01.png",
-    "house_2": "./resource/house_02.png",
-    "house_3": "./resource/house_03.png",
-    "house_4": "./resource/house_04.png",
-    "house_5": "./resource/house_05.png",
-    "house_6": "./resource/house_06.png",
-    "house_7": "./resource/house_07.png",
-    "house_8": "./resource/house_08.png",
+        "house_1": "./resource/house_01.png",
+        "house_2": "./resource/house_02.png",
+        "house_3": "./resource/house_03.png",
+        "house_4": "./resource/house_04.png",
+        "house_5": "./resource/house_05.png",
+        "house_6": "./resource/house_06.png",
+        "house_7": "./resource/house_07.png",
+        "house_8": "./resource/house_08.png",
 
-    "arrow": "./resource/arrow_t.png",
+        "arrow": "./resource/arrow_t.png",
 
-    "ymt": "./resource/ymt_amin_t_r_128.png",
-    "jp": "./resource/jp_amin_t_r_128.png",
-    "fdx": "./resource/fdx_amin_t_r_128.png",
-    "dhl": "./resource/dhl_amin_t_r_128.png",
-    "prkn": "./resource/prkn_anim_t_r_128.png",
-    "pkg_s": "./resource/package_anim_t_r_128.png",
-    "pkg_l": "./resource/package_l_anim_t_r_128.png",
+        "ymt": "./resource/ymt_amin_t_r_128.png",
+        "jp": "./resource/jp_amin_t_r_128.png",
+        "fdx": "./resource/fdx_amin_t_r_128.png",
+        "dhl": "./resource/dhl_amin_t_r_128.png",
+        "prkn": "./resource/prkn_anim_t_r_128.png",
+        "pkg_s": "./resource/package_anim_t_r_128.png",
+        "pkg_l": "./resource/package_l_anim_t_r_128.png",
 
-    "bg_sky": "./resource/bg_sky_gra.png",
-    "bg_road": "./resource/bg_road_t.png?202105051653",
-    "fg_rain": "./resource/fg_rain_amin.png",
+        "bg_sky": "./resource/bg_sky_gra.png",
+        "bg_road": "./resource/bg_road_t.png?202105051653",
+        "fg_rain": "./resource/fg_rain_amin.png",
+    },
+    spritesheet: {
+        player_ss: {
+            frame: {
+                "width": 128,
+                "height": 128,
+                "cols": 11, // フレーム数（横）
+                "rows": 1, // フレーム数（縦）
+            },
+            // アニメーションの定義（開始コマ、終了コマ、次のアニメーション）
+            animations: {
+                "stand": {
+                    "frames": [1],
+                    "next": "stand",
+                    "frequency": 60,
+                },
+                "run": {
+                    "frames": [0, 1],
+                    "next": "run",
+                    "frequency": 10,
+                },
+                "jump": {
+                    "frames": [0],
+                    "next": "jump",
+                    "frequency": 60,
+                },
+            },
+        },
+        fg_rain_ss: {
+            frame: {
+                "width": 350,
+                "height": 196,
+                "cols": 7, // フレーム数（横）
+                "rows": 1, // フレーム数（縦）
+            },
+            animations: {
+                "start": {
+                    "frames": [0, 1, 2, 3, 4, 5],
+                    "next": "start",
+                    "frequency": 10,
+                },
+            }
+        },
+    },
+    sound: {
+        "fall_se": 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/fall.mp3',
+        "coin_se": 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3',
+        "hit_se": 'https://iwasaku.github.io/test9/TT/resource/crrect_answer1.mp3',
+        "miss_se": 'https://iwasaku.github.io/test9/TT/resource/blip02.mp3',
+        "jump_se": 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/jump.mp3',
+        "shot_se": 'https://iwasaku.github.io/test9/TT/resource/laser1.mp3',
+    }
+
 };
 const PACKAGE_S_KIND = 5;  // 小包(S)を表す敵種別
 const PACKAGE_L_KIND = 6;  // 小包(L)を表す敵種別
 
-const fallSE = new Howl({
-    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/fall.mp3'
-});
-const coinSE = new Howl({
-    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/coin05.mp3'
-});
-const hitSE = new Howl({
-    src: 'https://iwasaku.github.io/test9/TT/resource/crrect_answer1.mp3'
-});
-const missSE = new Howl({
-    src: 'https://iwasaku.github.io/test9/TT/resource/blip02.mp3'
-});
-const jumpSE = new Howl({
-    src: 'https://iwasaku.github.io/test7/NEMLESSSTER/resource/jump.mp3'
-});
-const shotSE = new Howl({
-    src: 'https://iwasaku.github.io/test9/TT/resource/laser1.mp3'
-});
 
 // 定義
 var PL_STATUS = defineEnum({
@@ -348,7 +385,6 @@ var houseCounter = 0;
 var timeLeft = 0;
 var totalFrame = 0;
 var totalSec = 0;
-var fitWindowTimer = 0;
 
 const BASE_SPD = -10;
 
@@ -357,138 +393,174 @@ var bgRoadX = SCREEN_CENTER_X;
 var randomSeed = 3557;
 var randomMode = Boolean(0);
 
-tm.main(function () {
-    // アプリケーションクラスを生成
-    var app = tm.display.CanvasApp("#world");
-    app.resize(SCREEN_WIDTH, SCREEN_HEIGHT);    // サイズ(解像度)設定
-    app.fitWindow(false);                       // 手動フィッティング
-    app.background = "rgba(77, 136, 255, 1.0)"; // 背景色
-    app.fps = FPS;                              // フレーム数
-
-    var loading = tm.ui.LoadingScene({
-        assets: ASSETS,
+phina.main(function () {
+    var app = GameApp({
+        startLabel: 'logo',
         width: SCREEN_WIDTH,
         height: SCREEN_HEIGHT,
+        assets: ASSETS,
+        backgroundColor: 'black',
+        fps: FPS,
+
+        // シーンのリストを引数で渡す
+        scenes: [
+            {
+                className: 'LogoScene',
+                label: 'logo',
+                nextLabel: 'title',
+            },
+            {
+                className: 'TitleScene',
+                label: 'title',
+                nextLabel: 'game',
+            },
+            {
+                className: 'GameScene',
+                label: 'game',
+                nextLabel: 'game',
+            },
+        ]
     });
 
-    // 読み込み完了後に呼ばれるメソッドを登録
-    loading.onload = function () {
-        app.replaceScene(LogoScene());
-    };
+    // iOSなどでユーザー操作がないと音がならない仕様対策
+    // 起動後初めて画面をタッチした時に『無音』を鳴らす
+    app.domElement.addEventListener('touchend', function dummy() {
+        var s = phina.asset.Sound();
+        s.loadFromBuffer();
+        s.play().stop();
+        app.domElement.removeEventListener('touchend', dummy);
+    });
 
-    // ローディングシーンに入れ替える
-    app.replaceScene(loading);
+    // fps表示
+    //app.enableStats();
 
     // 実行
     app.run();
 });
 
 /*
+* ローディング画面をオーバーライド
+*/
+phina.define('LoadingScene', {
+    superClass: 'DisplayScene',
+
+    init: function (options) {
+        this.superInit(options);
+        // 背景色
+
+        var self = this;
+        var loader = phina.asset.AssetLoader();
+
+        // 明滅するラベル
+        let label = phina.display.Label({
+            text: "",
+            fontSize: 64,
+            fill: 'white',
+        }).addChildTo(this).setPosition(SCREEN_CENTER_X, SCREEN_CENTER_Y);
+
+        // ロードが進行したときの処理
+        loader.onprogress = function (e) {
+            // 進捗具合を％で表示する
+            label.text = "{0}%".format((e.progress * 100).toFixed(0));
+        };
+
+        // ローダーによるロード完了ハンドラ
+        loader.onload = function () {
+            // Appコアにロード完了を伝える（==次のSceneへ移行）
+            self.flare('loaded');
+        };
+
+        // ロード開始
+        loader.load(options.assets);
+    },
+
+});
+
+/*
  * ロゴ
  */
-tm.define("LogoScene", {
-    superClass: "tm.app.Scene",
+phina.define("LogoScene", {
+    superClass: 'DisplayScene',
 
-    init: function () {
-        this.superInit();
-        this.fromJSON({
-            children: [
-                {
-                    type: "Label", name: "logoLabel",
-                    x: SCREEN_CENTER_X,
-                    y: 320,
-                    fillStyle: "#888",
-                    fontSize: 64,
-                    fontFamily: FONT_FAMILY,
-                    text: "UNOFFICIAL GAME",
-                    align: "center",
-                },
-            ]
-        });
+    init: function (option) {
+        this.superInit(option);
         this.localTimer = 0;
     },
 
     update: function (app) {
-        // 時間が来たらタイトルへ
-        //        if (++this.localTimer >= 5 * app.fps)
-        this.app.replaceScene(TitleScene());
-        app.fitWindow(false);                            // 手動フィッティング
+        // フォント読み込み待ち
+        var self = this;
+        document.fonts.load('10pt "Press Start 2P"').then(function () {
+            self.exit();
+        });
     }
 });
 
 /*
  * タイトル
  */
-tm.define("TitleScene", {
-    superClass: "tm.app.Scene",
+phina.define("TitleScene", {
+    superClass: 'DisplayScene',
 
-    init: function () {
-        this.superInit();
-        this.fromJSON({
-            children: [
-                {
-                    type: "Label", name: "titleLabel",
-                    x: SCREEN_CENTER_X,
-                    y: 320,
-                    fillStyle: "#fff",
-                    fontSize: 64,
-                    fontFamily: FONT_FAMILY,
-                    text: "T.T.",
-                    align: "center",
-                },
-                {
-                    type: "FlatButton", name: "startButton",
-                    init: [
-                        {
-                            text: "START",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 64,
-                            bgColor: "hsl(240, 0%, 70%)",
-                        }
-                    ],
-                    x: SCREEN_CENTER_X,
-                    y: 580,
-                },
-            ]
-        });
-        this.localTimer = 0;
+    init: function (option) {
+        this.superInit(option);
+
+        this.titleLabel = Label({
+            text: "T.T.",
+            fontSize: 64,
+            fontFamily: FONT_FAMILY,
+            align: "center",
+            fill: "#fff",
+            x: SCREEN_CENTER_X,
+            y: 320,
+        }).addChildTo(this);
+        this.startButton = Button({
+            text: "START",
+            fontFamily: FONT_FAMILY,
+            fontSize: 64,
+            fill: "#444",
+            x: SCREEN_CENTER_X,
+            y: 580,
+            width: 512,
+            cornerRadius: 8,
+        }).addChildTo(this);
 
         var self = this;
-        this.startButton.onpointingstart = function () {
-            self.app.replaceScene(GameScene());
+        this.startButton.onpointstart = function () {
+            self.exit();
         };
+
+        this.localTimer = 0;
     },
 
     update: function (app) {
-        app.background = "rgba(0, 0, 0, 1.0)"; // 背景色
-        app.fitWindow(false); // 手動フィッティング
     }
 });
 
 /*
  * ゲーム
  */
-tm.define("GameScene", {
-    superClass: "tm.app.Scene",
+phina.define("GameScene", {
+    superClass: 'DisplayScene',
 
-    init: function () {
-        this.superInit();
+    init: function (option) {
+        this.superInit(option);
 
-        group0 = tm.display.CanvasElement().addChildTo(this);   // 空
-        group1 = tm.display.CanvasElement().addChildTo(this);   // 家、矢印
-        group2 = tm.display.CanvasElement().addChildTo(this);   // 道路
-        group3 = tm.display.CanvasElement().addChildTo(this);   // 敵
-        group4 = tm.display.CanvasElement().addChildTo(this);   // プレイヤー、小包
-        group5 = tm.display.CanvasElement().addChildTo(this);   // 雨
-        group6 = tm.display.CanvasElement().addChildTo(this);
+        group0 = DisplayElement().addChildTo(this);   // 空
+        group1 = DisplayElement().addChildTo(this);   // 家、矢印
+        group2 = DisplayElement().addChildTo(this);   // 道路
+        group3 = DisplayElement().addChildTo(this);   // 敵
+        group4 = DisplayElement().addChildTo(this);   // プレイヤー、小包
+        group5 = DisplayElement().addChildTo(this);   // 雨
+        group6 = DisplayElement().addChildTo(this);
 
-        this.bgGradation = tm.display.Sprite("bg_sky", SCREEN_WIDTH, 280).addChildTo(group0);
-        this.bgGradation.setPosition(SCREEN_CENTER_X, 140);
+        this.bgGradation = phina.display.Sprite("bg_sky").addChildTo(group0);
+        this.bgGradation.setPosition(SCREEN_CENTER_X, 140).setSize(SCREEN_WIDTH, 280);
 
-        this.bgRoad0 = tm.display.Sprite("bg_road", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
-        this.bgRoad0.setPosition(bgRoadX, SCREEN_CENTER_Y - 80);
-        this.bgRoad1 = tm.display.Sprite("bg_road", SCREEN_WIDTH, SCREEN_HEIGHT).addChildTo(group0);
-        this.bgRoad1.setPosition(bgRoadX + SCREEN_WIDTH, SCREEN_CENTER_Y - 80);
+        this.bgRoad0 = phina.display.Sprite("bg_road").addChildTo(group0);
+        this.bgRoad0.setPosition(bgRoadX, SCREEN_CENTER_Y - 80).setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+        this.bgRoad1 = phina.display.Sprite("bg_road").addChildTo(group0);
+        this.bgRoad1.setPosition(bgRoadX + SCREEN_WIDTH, SCREEN_CENTER_Y - 80).setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
         this.fgRain0 = new Rain(0,).addChildTo(group5);
         this.fgRain1 = new Rain(SCREEN_WIDTH).addChildTo(group5);
@@ -496,197 +568,198 @@ tm.define("GameScene", {
         clearArrays();
         player = new Player().addChildTo(group4);
 
-        this.fromJSON({
-            children: [
-                {
-                    type: "Label", name: "nowScoreLabel",
-                    x: 0 + 16,
-                    y: 32,
-                    fillStyle: "#fff",
-                    shadowColor: "#000",
-                    shadowBlur: 10,
-                    fontSize: 64,
-                    fontFamily: FONT_FAMILY,
-                    text: "SCORE:0",
-                    align: "left",
-                },
-                {
-                    type: "Label", name: "packageLeftLabel",
-                    x: 0 + 16,
-                    y: 80,
-                    fillStyle: "#fff",
-                    shadowColor: "#000",
-                    shadowBlur: 10,
-                    fontSize: 64,
-                    fontFamily: FONT_FAMILY,
-                    text: "0",
-                    align: "left",
-                },
-                {
-                    type: "Label", name: "timeLeftLabel",
-                    x: SCREEN_CENTER_X,
-                    y: 80,
-                    fillStyle: "#fff",
-                    shadowColor: "#000",
-                    shadowBlur: 10,
-                    fontSize: 128,
-                    fontFamily: FONT_FAMILY,
-                    text: "0",
-                    align: "center",
-                },
-                {
-                    type: "Label", name: "startLabel",
-                    x: SCREEN_CENTER_X,
-                    y: SCREEN_CENTER_Y + 80,
-                    fillStyle: "#fff",
-                    shadowColor: "#000",
-                    shadowBlur: 10,
-                    fontSize: 96,
-                    fontFamily: FONT_FAMILY,
-                    text: "TAP TO START",
-                    align: "center",
-                },
-                {
-                    type: "FlatButton", name: "tweetButton",
-                    init: [
-                        {
-                            text: "TWEET",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 64,
-                            bgColor: "hsl(240, 80%, 70%)",
-                        }
-                    ],
-                    x: SCREEN_CENTER_X - 140 * 2,
-                    y: SCREEN_CENTER_Y + 140 * 3,
-                    alpha: 0.0,
-                },
-                {
-                    type: "FlatButton", name: "restartButton",
-                    init: [
-                        {
-                            text: "RESTART",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 64,
-                            cornerRadius: 8,
-                            bgColor: "hsl(240, 0%, 70%)",
-                        }
-                    ],
-                    x: SCREEN_CENTER_X + 140 * 2,
-                    y: SCREEN_CENTER_Y + 140 * 3,
-                    alpha: 0.0,
-                },
-                {
-                    type: "FlatButton", name: "keyUp",
-                    init: [
-                        {
-                            text: "↑",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 96,
-                            width: 180,
-                            height: 180,
-                            bgColor: "hsl(0, 100%, 50%)",
-                        }
-                    ],
-                    x: (0 + 96) + 96 + 192,
-                    y: (SCREEN_HEIGHT - 96) - 96 - 192,
-                    alpha: 0.0,
-                },
-                {
-                    type: "FlatButton", name: "keyDown",
-                    init: [
-                        {
-                            text: "↓",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 96,
-                            width: 180,
-                            height: 180,
-                            bgColor: "hsl(0, 100%, 50%)",
-                        }
-                    ],
-                    x: (0 + 96) + 96 + 192,
-                    y: (SCREEN_HEIGHT - 96) - 96,
-                    alpha: 0.0,
-                },
-                {
-                    type: "FlatButton", name: "keyLeft",
-                    init: [
-                        {
-                            text: "←",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 96,
-                            width: 180,
-                            height: 180,
-                            bgColor: "hsl(0, 100%, 50%)",
-                        }
-                    ],
-                    x: (0 + 96) + 96,
-                    y: (SCREEN_HEIGHT - 96) - 192,
-                    alpha: 0.0,
-                },
-                {
-                    type: "FlatButton", name: "keyRight",
-                    init: [
-                        {
-                            text: "→",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 96,
-                            width: 180,
-                            height: 180,
-                            bgColor: "hsl(0, 100%, 50%)",
-                        }
-                    ],
-                    x: (0 + 96) + 96 + 192 + 192,
-                    y: (SCREEN_HEIGHT - 96) - 192,
-                    alpha: 0.0,
-                },
-                {
-                    type: "FlatButton", name: "buttonA",
-                    init: [
-                        {
-                            text: "Ａ",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 96,
-                            width: 180,
-                            height: 180,
-                            bgColor: "hsl(0, 100%, 50%)",
-                        }
-                    ],
-                    x: (SCREEN_WIDTH - 96) - 96 - 192,
-                    y: (SCREEN_HEIGHT - 96) - 192,
-                    alpha: 0.0,
-                },
-                {
-                    type: "FlatButton", name: "buttonB",
-                    init: [
-                        {
-                            text: "Ｂ",
-                            fontFamily: FONT_FAMILY,
-                            fontSize: 96,
-                            width: 180,
-                            height: 180,
-                            bgColor: "hsl(0, 100%, 50%)",
-                        }
-                    ],
-                    x: (SCREEN_WIDTH - 96) - 96,
-                    y: (SCREEN_HEIGHT - 96) - 192,
-                    alpha: 0.0,
-                },
-            ]
-        });
+        this.nowScoreLabel = Label({
+            text: "SCORE:0",
+            fontSize: 48,
+            fontFamily: FONT_FAMILY,
+            align: "left",
+            fill: "#fff",
+            shadow: "#000",
+            shadowBlur: 10,
+            x: 0 + 16,
+            y: 32,
+        }).addChildTo(group6);
+        this.packageLeftLabel = Label({
+            text: "0",
+            fontSize: 48,
+            fontFamily: FONT_FAMILY,
+            align: "left",
+            fill: "#fff",
+            shadow: "#000",
+            shadowBlur: 10,
+            x: 0 + 16,
+            y: 80,
+        }).addChildTo(group6);
+        this.timeLeftLabel = Label({
+            text: "0",
+            fontSize: 128,
+            fontFamily: FONT_FAMILY,
+            align: "center",
+            fill: "#fff",
+            shadow: "#000",
+            shadowBlur: 10,
+            x: SCREEN_CENTER_X,
+            y: 80,
+        }).addChildTo(group6);
+        this.startLabel = Label({
+            text: "TAP TO START",
+            fontSize: 96,
+            fontFamily: FONT_FAMILY,
+            align: "center",
+            fill: "#fff",
+            shadow: "#000",
+            shadowBlur: 10,
+            x: SCREEN_CENTER_X,
+            y: SCREEN_CENTER_Y + 80,
+        }).addChildTo(group6);
+        this.tweetButton = Button({
+            text: "POST",
+            fontSize: 64,
+            fontFamily: FONT_FAMILY,
+            fill: "#7575EF",
+            x: SCREEN_CENTER_X - 140 * 2,
+            y: SCREEN_CENTER_Y + 140 * 3,
+            width: 512,
+            cornerRadius: 8,
+        }).addChildTo(group6);
+        this.tweetButton.alpha = 0.0;
+        this.restartButton = Button({
+            text: "RESTART",
+            fontSize: 64,
+            fontFamily: FONT_FAMILY,
+            fill: "#B2B2B2",
+            x: SCREEN_CENTER_X + 140 * 2,
+            y: SCREEN_CENTER_Y + 140 * 3,
+            cornerRadius: 8,
+            width: 512,
+        }).addChildTo(group6);
+        this.restartButton.alpha = 0.0;
 
-        this.shurikenLeftSprite = tm.display.Sprite("package").addChildTo(group2);
+        this.screenButton = Button({
+            text: "",
+            fontSize: 32,
+            fontFamily: FONT_FAMILY,
+            fill: "#444",
+            x: SCREEN_CENTER_X,
+            y: SCREEN_CENTER_Y,
+            width: SCREEN_WIDTH,
+            height: SCREEN_HEIGHT,
+        }).addChildTo(group6);
+        this.screenButton.alpha = 0.0;
+
+        this.keyUp = Button({
+            text: "▲",
+            fontSize: 96,
+            fontFamily: "misaki_gothic",
+            fill: "hsl(0, 100%, 50%)",
+            x: (0 + 96) + 96 + 192,
+            y: (SCREEN_HEIGHT - 96) - 96 - 192,
+            width: 180,
+            height: 180,
+        }).addChildTo(group6);
+        this.keyUp.alpha = 0.0;
+        this.keyDown = Button({
+            text: "▼",
+            fontSize: 96,
+            fontFamily: "misaki_gothic",
+            fill: "hsl(0, 100%, 50%)",
+            x: (0 + 96) + 96 + 192,
+            y: (SCREEN_HEIGHT - 96) - 96,
+            width: 180,
+            height: 180,
+        }).addChildTo(group6);
+        this.keyDown.alpha = 0.0;
+        this.keyLeft = Button({
+            text: "<",
+            fontSize: 96,
+            fontFamily: FONT_FAMILY,
+            fill: "hsl(0, 100%, 50%)",
+            x: (0 + 96) + 96,
+            y: (SCREEN_HEIGHT - 96) - 192,
+            width: 180,
+            height: 180,
+        }).addChildTo(group6);
+        this.keyLeft.alpha = 0.0;
+        this.keyRight = Button({
+            text: ">",
+            fontSize: 96,
+            fontFamily: FONT_FAMILY,
+            fill: "hsl(0, 100%, 50%)",
+            x: (0 + 96) + 96 + 192 + 192,
+            y: (SCREEN_HEIGHT - 96) - 192,
+            width: 180,
+            height: 180,
+        }).addChildTo(group6);
+        this.keyRight.alpha = 0.0;
+        this.buttonA = Button({
+            text: "A",
+            fontSize: 96,
+            fontFamily: FONT_FAMILY,
+            fill: "hsl(0, 100%, 50%)",
+            x: (SCREEN_WIDTH - 96) - 96 - 192,
+            y: (SCREEN_HEIGHT - 96) - 192,
+            width: 180,
+            height: 180,
+        }).addChildTo(group6);
+        this.buttonA.alpha = 0.0;
+        this.buttonB = Button({
+            text: "B",
+            fontFamily: FONT_FAMILY,
+            fontSize: 96,
+            width: 180,
+            height: 180,
+            fill: "hsl(0, 100%, 50%)",
+            x: (SCREEN_WIDTH - 96) - 96,
+            y: (SCREEN_HEIGHT - 96) - 192,
+        }).addChildTo(group6);
+        this.buttonB.alpha = 0.0;
+
+        this.shurikenLeftSprite = phina.display.Sprite("package").addChildTo(group6);
         this.shurikenLeftSprite.setPosition(0 + 128, 80).setScale(0.9, 0.9);
 
         this.tweetButton.sleep();
-        this.restartButton.sleep();
-
-        var self = this;
-        this.restartButton.onpointingstart = function () {
-            self.app.replaceScene(GameScene());
+        this.tweetButton.onclick = function () {
+            var twitterURL = phina.social.Twitter.createURL({
+                type: "tweet",
+                text: "T.T. スコア: " + nowScore + " (" + nowDeliveryCount + "軒に配達)+\n",
+                hashtags: ["ネムレス", "NEMLESSS"],
+                url: "https://iwasaku.github.io/test9/TT/",
+            });
+            window.open(twitterURL);
         };
 
+        this.restartButton.sleep();
+        var self = this;
+        this.restartButton.onpointstart = function () {
+            self.exit();
+        };
+
+        this.screenButton.onclick = function () {
+            if (player.status.isDead) return;
+
+            if (!player.status.isStart) {
+                self.startLabel.remove();
+
+                self.keyUp.alpha = 0.4;
+                self.keyDown.alpha = 0.4;
+                self.keyLeft.alpha = 0.4;
+                self.keyRight.alpha = 0.4;
+                self.buttonA.alpha = 0.4;
+                self.buttonB.alpha = 0.4;
+
+                self.keyUp.wakeUp();
+                self.keyDown.wakeUp();
+                self.keyLeft.wakeUp();
+                self.keyRight.wakeUp();
+                self.buttonA.wakeUp();
+                self.buttonB.wakeUp();
+                player.status = PL_STATUS.STAND;
+                player.anim.gotoAndPlay("run");
+            }
+        }
+
         this.keyUp.sleep();
-        this.keyUp.onpointingstart = function () {
+        this.keyUp.onpointstart = function () {
             if (!player.status.canAction) return;
             if (player.nowLaneY <= 0) return;
             player.status = PL_STATUS.MOVE_UP;
@@ -695,7 +768,7 @@ tm.define("GameScene", {
         };
 
         this.keyDown.sleep();
-        this.keyDown.onpointingstart = function () {
+        this.keyDown.onpointstart = function () {
             if (!player.status.canAction) return;
             if (player.nowLaneY >= lanePosY.length - 1) return;
             player.status = PL_STATUS.MOVE_DOWN;
@@ -704,7 +777,7 @@ tm.define("GameScene", {
         };
 
         this.keyLeft.sleep();
-        this.keyLeft.onpointingstart = function () {
+        this.keyLeft.onpointstart = function () {
             if (!player.status.canAction) return;
             if (player.nowLaneX <= 0) return;
             player.status = PL_STATUS.MOVE_LEFT;
@@ -713,7 +786,7 @@ tm.define("GameScene", {
         };
 
         this.keyRight.sleep();
-        this.keyRight.onpointingstart = function () {
+        this.keyRight.onpointstart = function () {
             if (!player.status.canAction) return;
             if (player.nowLaneX >= lanePosX.length - 1) return;
             player.status = PL_STATUS.MOVE_RIGHT;
@@ -722,22 +795,22 @@ tm.define("GameScene", {
         };
 
         this.buttonA.sleep();
-        this.buttonA.onpointingstart = function () {
+        this.buttonA.onpointstart = function () {
             if (!player.status.canAction) return;
             if (packageLeft <= 0) return;
             player.status = PL_STATUS.SHOT;
             player.moveCounter = 0;
-            shotSE.play();
+            SoundManager.play("shot_se");
             packageLeft--;
         };
 
         this.buttonB.sleep();
-        this.buttonB.onpointingstart = function () {
+        this.buttonB.onpointstart = function () {
             if (!player.status.canAction) return;
             player.status = PL_STATUS.JUMP;
             player.moveCounter = 0;
-            jumpSE.play();
-            player.gotoAndPlay("jump");
+            SoundManager.play("jump_se");
+            player.anim.gotoAndPlay("jump");
         };
 
         this.buttonAlpha = 0.0;
@@ -751,7 +824,6 @@ tm.define("GameScene", {
         totalFrame = 0;
         timeLeft = 60 * FPS;
         randomSeed = 3557;
-        fitWindowTimer = 0;
 
         this.frame = 0;
 
@@ -766,32 +838,7 @@ tm.define("GameScene", {
         }
     },
 
-    onpointingstart: function () {
-        if (player.status.isDead) return;
-
-        if (!player.status.isStart) {
-            this.startLabel.remove();
-
-            this.keyUp.setAlpha(0.4);
-            this.keyDown.setAlpha(0.4);
-            this.keyLeft.setAlpha(0.4);
-            this.keyRight.setAlpha(0.4);
-            this.buttonA.setAlpha(0.4);
-            this.buttonB.setAlpha(0.4);
-
-            this.keyUp.wakeUp();
-            this.keyDown.wakeUp();
-            this.keyLeft.wakeUp();
-            this.keyRight.wakeUp();
-            this.buttonA.wakeUp();
-            this.buttonB.wakeUp();
-            player.status = PL_STATUS.STAND;
-            player.gotoAndPlay("run");
-        }
-    },
-
     update: function (app) {
-        if (++fitWindowTimer % 15 === 0) app.fitWindow(false);    // 手動フィッティング
         if (!player.status.isDead) {
             if (player.status.isStart) {
                 this.frame++;
@@ -893,29 +940,16 @@ tm.define("GameScene", {
             if (timeLeft < 0) {
                 timeLeft = 0;
                 player.status = PL_STATUS.DEAD;
-                player.gotoAndPlay("stand");
+                player.anim.gotoAndPlay("stand");
             }
             this.timeLeftLabel.text = Math.floor(timeLeft / app.fps);
             this.nowScoreLabel.text = "SCORE:" + nowScore;
-            if (packageLeft < 999) this.packageLeftLabel.text = "     x" + packageLeft;
+            if (packageLeft < 999) this.packageLeftLabel.text = "   x" + packageLeft;
             else this.packageLeftLabel.text = 999;
         } else {
             if (!this.stopBGM) {
-                fallSE.play();
+                SoundManager.play("fall_se");
                 this.stopBGM = true;
-
-                var self = this;
-                // tweet ボタン
-                this.tweetButton.onclick = function () {
-                    var twitterURL = tm.social.Twitter.createURL({
-                        type: "tweet",
-                        text: "T.T. スコア: " + nowScore + " (" + nowDeliveryCount + "軒に配達)",
-                        hashtags: ["ネムレス", "NEMLESSS"],
-                        url: "https://iwasaku.github.io/test9/TT/",
-                    });
-                    window.open(twitterURL);
-                };
-
                 this.keyUp.sleep();
                 this.keyDown.sleep();
                 this.keyLeft.sleep();
@@ -927,8 +961,8 @@ tm.define("GameScene", {
             if (this.buttonAlpha > 1.0) {
                 this.buttonAlpha = 1.0;
             }
-            this.tweetButton.setAlpha(this.buttonAlpha);
-            this.restartButton.setAlpha(this.buttonAlpha);
+            this.tweetButton.alpha = this.buttonAlpha;
+            this.restartButton.alpha = this.buttonAlpha;
             if (this.buttonAlpha > 0.7) {
                 this.tweetButton.wakeUp();
                 this.restartButton.wakeUp();
@@ -940,32 +974,19 @@ tm.define("GameScene", {
 /*
 * Rain
 */
-tm.define("Rain", {
-    superClass: "tm.app.AnimationSprite",
+phina.define("Rain", {
+    superClass: 'Sprite',
 
     init: function (ofs) {
-        var ss = tm.asset.SpriteSheet({
-            // 画像
-            image: "fg_rain",
-            // １コマのサイズ指定および全コマ数
-            frame: {
-                width: 350,
-                height: 196,
-                count: 7
-            },
-            // アニメーションの定義（開始コマ、終了コマ、次のアニメーション）
-            animations: {
-                "start": [0, 6, "start", 10],
-            }
-        });
-
-        this.superInit(ss, SCREEN_WIDTH, SCREEN_HEIGHT);
-        this.setPosition(SCREEN_CENTER_X + ofs, SCREEN_CENTER_Y).setScale(1, 1);
+        this.superInit("fg_rain", SCREEN_WIDTH, SCREEN_HEIGHT);
+        this.anim = FrameAnimation('fg_rain_ss').attachTo(this);
+        this.anim.fit = false;
+        this.setPosition(SCREEN_CENTER_X + ofs, SCREEN_CENTER_Y).setScale(1.0, 1.0);
         this.setInteractive(false);
         this.alphaInc = true;
         this.alpha = 0.1;
 
-        this.gotoAndPlay("start");
+        this.anim.gotoAndPlay("start");
     },
 
     update: function (app) {
@@ -988,28 +1009,12 @@ tm.define("Rain", {
 /*
  * Player
  */
-tm.define("Player", {
-    superClass: "tm.app.AnimationSprite",
+phina.define("Player", {
+    superClass: 'Sprite',
 
-    init: function () {
-        var ss = tm.asset.SpriteSheet({
-            // 画像
-            image: "player",
-            // １コマのサイズ指定および全コマ数
-            frame: {
-                width: 128,
-                height: 128,
-                count: 11
-            },
-            // アニメーションの定義（開始コマ、終了コマ、次のアニメーション）
-            animations: {
-                "stand": [1, 2, "stand", 60],
-                "run": [0, 2, "run", 10],
-                "jump": [0, 1, "jump", 60],
-            }
-        });
-
-        this.superInit(ss, 128, 128);
+    init: function (option) {
+        this.superInit("player");
+        this.anim = FrameAnimation('player_ss').attachTo(this);
         this.direct = '';
         this.zRot = 0;
         this.nowLaneX = 4;
@@ -1022,7 +1027,7 @@ tm.define("Player", {
 
         this.status = PL_STATUS.INIT;
         this.moveCounter = 0;
-        this.gotoAndPlay("stand");
+        this.anim.gotoAndPlay("stand");
     },
 
     update: function (app) {
@@ -1049,7 +1054,7 @@ tm.define("Player", {
                 if (++this.moveCounter >= totalTime) {
                     this.moveCounter = 0;
                     this.status = PL_STATUS.STAND;
-                    this.gotoAndPlay("run");
+                    this.anim.gotoAndPlay("run");
                     this.nowLaneX = this.nextLaneX;
                     this.nowLaneY = this.nextLaneY;
                     this.x = lanePosX[this.nowLaneX];
@@ -1063,15 +1068,15 @@ tm.define("Player", {
 /*
  * Package
  */
-tm.define("Package", {
-    superClass: "tm.app.Sprite",
+phina.define("Package", {
+    superClass: "Sprite",
 
     init: function (uid, xPos, yPos) {
-        this.superInit("package", 64, 64);
+        this.superInit("package");
         this.uid = uid;
         this.direct = '';
         this.zRot = 0;
-        this.setPosition(xPos, yPos).setScale(1, 1);
+        this.setPosition(xPos, yPos).setSize(64, 64).setScale(1, 1);
         this.setInteractive(false);
         this.setBoundingType("rect");
         this.isDead = Boolean(0);
@@ -1083,7 +1088,7 @@ tm.define("Package", {
         // 画面上端から出た?
         if (this.y <= 0 - 80) {
             timeLeft -= lanePosPenaltyY[player.nowLaneY] * FPS;
-            missSE.play();
+            SoundManager.play("miss_se");
             packageArray.erase(this);
             this.remove();
         }
@@ -1094,8 +1099,8 @@ tm.define("Package", {
 /*
  * Enemey
  */
-tm.define("Enemy", {
-    superClass: "tm.app.AnimationSprite",
+phina.define("Enemy", {
+    superClass: 'Sprite',
 
     init: function (uid, kind, fromRight, spdRate) {
         var tmpDir = fromRight ? 1 : -1;
@@ -1136,24 +1141,8 @@ tm.define("Enemy", {
                 break;
         }
 
-        var ss = tm.asset.SpriteSheet({
-            // 画像
-            image: this.spriteName,
-            // １コマのサイズ指定および全コマ数
-            frame: {
-                width: 128,
-                height: 128,
-                count: 11
-            },
-            // アニメーションの定義（開始コマ、終了コマ、次のアニメーション）
-            animations: {
-                "stand": [1, 2, "stand", 60],
-                "run": [0, 2, "run", 10],
-                "jump": [0, 1, "jump", 60],
-            }
-        });
-
-        this.superInit(ss, 128, 128);
+        this.superInit(this.spriteName);
+        this.anim = FrameAnimation('player_ss').attachTo(this);
         this.setScale(-tmpDir, 1);
         this.direct = '';
         this.setInteractive(false);
@@ -1168,7 +1157,7 @@ tm.define("Enemy", {
 
         this.uid = uid;
         this.kind = kind;
-        this.vec = tm.geom.Vector2(0, 0);
+        this.vec = phina.geom.Vector2(0, 0);
         if (kind == 0) {
             if ((++prknCounter % 2) === 0) {
                 this.nowLaneY = player.nowLaneY;
@@ -1183,13 +1172,13 @@ tm.define("Enemy", {
             // 右から
             if (kind === PACKAGE_S_KIND) {
                 this.setScale(0.5, 0.5);
-                this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY] + 32);
+                this.setPosition(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY] + 32);
             } else {
-                this.position.set(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY]);
+                this.setPosition(SCREEN_WIDTH + 64, lanePosY[this.nowLaneY]);
             }
         } else {
             // 左から
-            this.position.set(0 - 64, lanePosY[this.nowLaneY]);
+            this.setPosition(0 - 64, lanePosY[this.nowLaneY]);
         }
 
         this.isMoveUp = (myRandom(0, 1) === 0);
@@ -1197,14 +1186,14 @@ tm.define("Enemy", {
 
         this.counter = 0;
         this.status = EN_STATUS.MOVE_FORWARD;
-        this.gotoAndPlay("run");
+        this.anim.gotoAndPlay("run");
     },
 
     update: function (app) {
         if (player.status.isDead) {
             if (this.status != EN_STATUS.STOP) {
                 this.status = EN_STATUS.STOP;
-                this.gotoAndPlay("stand");
+                this.anim.gotoAndPlay("stand");
             }
             return;
         }
@@ -1328,13 +1317,13 @@ tm.define("Enemy", {
                     if (this.kind === PACKAGE_S_KIND) packageLeft += 10;
                     else packageLeft += 50;
                     if (packageLeft >= 999) packageLeft = 999;
-                    coinSE.play();
+                    SoundManager.play("coin_se");
 
                     enemyArray.erase(this);
                     this.remove();
                 } else {
                     player.status = PL_STATUS.DEAD;
-                    player.gotoAndPlay("stand");
+                    player.anim.gotoAndPlay("stand");
                 }
             }
         }
@@ -1346,14 +1335,15 @@ tm.define("Enemy", {
 /*
  * house
  */
-tm.define("House", {
-    superClass: "tm.app.Sprite",
+phina.define("House", {
+    superClass: "Sprite",
 
     init: function (uid, kind, xofs, isTaget) {
         this.spriteName = "";
         this.isTaget = isTaget;
         this.spriteName = "house_" + kind;
-        this.superInit(this.spriteName, 128, 128);
+        this.superInit(this.spriteName);
+        this.setSize(128, 128);
         this.direct = '';
         this.setInteractive(false);
         this.setBoundingType("rect");
@@ -1362,7 +1352,7 @@ tm.define("House", {
 
         this.uid = uid;
         this.kind = kind;
-        this.vec = tm.geom.Vector2(0, 0);
+        this.vec = phina.geom.Vector2(0, 0);
         this.xSpd = BASE_SPD;
         this.position.set(SCREEN_WIDTH + 64 - xofs, 0 + 140 * 1);
         this.counter = 0;
@@ -1388,18 +1378,19 @@ tm.define("House", {
 /*
  * Arrow
  */
-tm.define("Arrow", {
-    superClass: "tm.app.Sprite",
+phina.define("Arrow", {
+    superClass: "Sprite",
 
     init: function (uid, xofs) {
         this.spriteName = "arrow";
-        this.superInit(this.spriteName, 128, 128);
+        this.superInit(this.spriteName);
         this.direct = '';
+        this.setSize(128, 128);
         this.setInteractive(false);
         this.setBoundingType("rect");
 
         this.uid = uid;
-        this.vec = tm.geom.Vector2(0, 0);
+        this.vec = phina.geom.Vector2(0, 0);
         this.xSpd = BASE_SPD;
         this.yOrg = 0 + 140 * 0;
         this.yOfs = 0;
@@ -1446,7 +1437,7 @@ tm.define("Arrow", {
                 nowScore += tmpPnt;
                 timeLeft += 5 * FPS;
                 nowDeliveryCount++;
-                hitSE.play();
+                SoundManager.play("hit_se");
                 break;
             }
         }
