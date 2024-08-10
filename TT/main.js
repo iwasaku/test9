@@ -721,7 +721,7 @@ phina.define("GameScene", {
         this.tweetButton.onclick = function () {
             var twitterURL = phina.social.Twitter.createURL({
                 type: "tweet",
-                text: "T.T. スコア: " + nowScore + " (" + nowDeliveryCount + "軒に配達)+\n",
+                text: "T.T. スコア: " + nowScore + " (" + nowDeliveryCount + "軒に配達)\n",
                 hashtags: ["ネムレス", "NEMLESSS"],
                 url: "https://iwasaku.github.io/test9/TT/",
             });
