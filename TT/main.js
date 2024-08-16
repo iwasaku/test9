@@ -393,6 +393,11 @@ var bgRoadX = SCREEN_CENTER_X;
 var randomSeed = 3557;
 var randomMode = Boolean(0);
 
+// 共有ボタン用
+let postText = null;
+const postURL = "https://iwasaku.github.io/test9/TT/";
+const postTags = "#ネムレス #NEMLESSS";
+
 phina.main(function () {
     var app = GameApp({
         startLabel: 'logo',
@@ -485,14 +490,22 @@ phina.define("LogoScene", {
     init: function (option) {
         this.superInit(option);
         this.localTimer = 0;
+        this.font1 = false;
+        this.font2 = false;
     },
 
     update: function (app) {
-        // フォント読み込み待ち
+        // フォントロード完了待ち
         var self = this;
         document.fonts.load('10pt "Press Start 2P"').then(function () {
-            self.exit();
+            self.font1 = true;
         });
+        document.fonts.load('10pt "icomoon"').then(function () {
+            self.font2 = true;
+        });
+        if (this.font1 && this.font2) {
+            self.exit();
+        }
     }
 });
 
@@ -612,17 +625,65 @@ phina.define("GameScene", {
             x: SCREEN_CENTER_X,
             y: SCREEN_CENTER_Y + 80,
         }).addChildTo(group6);
-        this.tweetButton = Button({
-            text: "POST",
+
+        // X
+        this.xButton = Button({
+            text: String.fromCharCode(0xe902),
             fontSize: 64,
-            fontFamily: FONT_FAMILY,
+            fontFamily: "icomoon",
+            fill: "#7575EF",
+            x: SCREEN_CENTER_X - 140 * 2 - 128,
+            y: SCREEN_CENTER_Y + 140 * 3,
+            cornerRadius: 8,
+            width: 96,
+        }).addChildTo(group6);
+        this.xButton.onclick = function () {
+            // https://developer.x.com/en/docs/twitter-for-websites/tweet-button/guides/web-intent
+            let shareURL = "https://x.com/intent/tweet?text=" + encodeURIComponent(postText + "\n" + postTags + "\n") + "&url=" + encodeURIComponent(postURL);
+            window.open(shareURL);
+        };
+        this.xButton.alpha = 0.0;
+        this.xButton.sleep();
+
+        // threads
+        this.threadsButton = Button({
+            text: String.fromCharCode(0xe901),
+            fontSize: 64,
+            fontFamily: "icomoon",
             fill: "#7575EF",
             x: SCREEN_CENTER_X - 140 * 2,
             y: SCREEN_CENTER_Y + 140 * 3,
-            width: 512,
             cornerRadius: 8,
+            width: 96,
         }).addChildTo(group6);
-        this.tweetButton.alpha = 0.0;
+        this.threadsButton.onclick = function () {
+            // https://developers.facebook.com/docs/threads/threads-web-intents/
+            // web intentでのハッシュタグの扱いが環境（ブラウザ、iOS、Android）によって違いすぎるので『#』を削って通常の文字列にしておく
+            let shareURL = "https://www.threads.net/intent/post?text=" + encodeURIComponent(postText + "\n\n" + postTags.replace(/#/g, "")) + "&url=" + encodeURIComponent(postURL);
+            window.open(shareURL);
+        };
+        this.threadsButton.alpha = 0.0;
+        this.threadsButton.sleep();
+
+        // bluesky
+        this.bskyButton = Button({
+            text: String.fromCharCode(0xe900),
+            fontSize: 64,
+            fontFamily: "icomoon",
+            fill: "#7575EF",
+            x: SCREEN_CENTER_X - 140 * 2 + 128,
+            y: SCREEN_CENTER_Y + 140 * 3,
+            cornerRadius: 8,
+            width: 96,
+        }).addChildTo(group6);
+        this.bskyButton.onclick = function () {
+            // https://docs.bsky.app/docs/advanced-guides/intent-links
+            let shareURL = "https://bsky.app/intent/compose?text=" + encodeURIComponent(postText + "\n" + postTags + "\n" + postURL);
+            window.open(shareURL);
+        };
+        this.bskyButton.alpha = 0.0;
+        this.bskyButton.sleep();
+
         this.restartButton = Button({
             text: "RESTART",
             fontSize: 64,
@@ -716,17 +777,6 @@ phina.define("GameScene", {
 
         this.shurikenLeftSprite = phina.display.Sprite("package").addChildTo(group6);
         this.shurikenLeftSprite.setPosition(0 + 128, 80).setScale(0.9, 0.9);
-
-        this.tweetButton.sleep();
-        this.tweetButton.onclick = function () {
-            var twitterURL = phina.social.Twitter.createURL({
-                type: "tweet",
-                text: "T.T. スコア: " + nowScore + " (" + nowDeliveryCount + "軒に配達)\n",
-                hashtags: ["ネムレス", "NEMLESSS"],
-                url: "https://iwasaku.github.io/test9/TT/",
-            });
-            window.open(twitterURL);
-        };
 
         this.restartButton.sleep();
         var self = this;
@@ -950,6 +1000,8 @@ phina.define("GameScene", {
             if (!this.stopBGM) {
                 SoundManager.play("fall_se");
                 this.stopBGM = true;
+                postText = "T.T.\nスコア: " + nowScore + "\n" + nowDeliveryCount + "軒に配達";
+
                 this.keyUp.sleep();
                 this.keyDown.sleep();
                 this.keyLeft.sleep();
@@ -961,10 +1013,14 @@ phina.define("GameScene", {
             if (this.buttonAlpha > 1.0) {
                 this.buttonAlpha = 1.0;
             }
-            this.tweetButton.alpha = this.buttonAlpha;
+            this.xButton.alpha = this.buttonAlpha;
+            this.threadsButton.alpha = this.buttonAlpha;
+            this.bskyButton.alpha = this.buttonAlpha;
             this.restartButton.alpha = this.buttonAlpha;
             if (this.buttonAlpha > 0.7) {
-                this.tweetButton.wakeUp();
+                this.xButton.wakeUp();
+                this.threadsButton.wakeUp();
+                this.bskyButton.wakeUp();
                 this.restartButton.wakeUp();
             }
         }
